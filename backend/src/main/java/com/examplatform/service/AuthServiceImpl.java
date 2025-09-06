@@ -9,13 +9,18 @@ import com.examplatform.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
+
+@Slf4j
 @Service
+
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+
 
     @Autowired
     public AuthServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder){
@@ -26,8 +31,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public String registerUser(LoginRequest request) {
+        log.info("Starting process");
         String roleFromRequest = request.getRole();
         if (roleFromRequest == null || roleFromRequest.isEmpty()) {
+            log.error("Failed to process");
+
             throw new RuntimeException("Role must be provided");
         }
         // Now allow instructors to register just like students.
@@ -66,9 +74,14 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
+        log.info("Starting process for id");
+        log.info("Lombok @Slf4j working for email={}", request.getEmail());
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())){
+            log.error("Failed to process id");
             throw new RuntimeException("Invalid password");
         }
         LoginResponse response = new LoginResponse();

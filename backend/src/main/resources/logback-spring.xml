@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+
+    <!-- Paths & shared pattern -->
+    <property name="LOG_PATH" value="logs"/>
+    <property name="LOG_FILE" value="${LOG_PATH}/app.log"/>
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex{full}"/>
+
+    <!-- Console -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Rolling file: new file per day + roll when >10MB; keep 30 days, cap total size -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- app-2025-09-05.0.log.gz, app-2025-09-05.1.log.gz, ... -->
+            <fileNamePattern>logs/app-%d{yyyy-MM-dd_HH-mm}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100KB</maxFileSize>
+            <maxHistory>2</maxHistory>
+            <totalSizeCap>5MB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Tune noisy libs if needed -->
+    <logger name="org.springframework" level="INFO"/>
+    <!-- Replace with your base package -->
+    <logger name="com.examplatform.service" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>
