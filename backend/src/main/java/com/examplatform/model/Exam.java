@@ -19,8 +19,8 @@ public class Exam {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = true)
-    private Integer numberOfQuestions;
+    @Column(name = "number_Of_questions",nullable = false)
+    private int  numberOfQuestions = 0;
 
     @JsonProperty
     @Transient
@@ -60,13 +60,24 @@ public class Exam {
         }
     }
 
+    private static final org.slf4j.Logger log =
+            org.slf4j.LoggerFactory.getLogger(Exam.class);
+    @PrePersist
+    @PreUpdate
+    private void ensureNumberOfQuestions() {
+        if (this.numberOfQuestions <= 0) {
+            this.numberOfQuestions = (this.questions != null) ? this.questions.size() : 0;
+        }
+    }
+
+
     @JsonIgnore
     @Transient
     public Exam getRandomizedExam() {
         List<Question> shuffled = new ArrayList<>(questions);
         Collections.shuffle(shuffled);
         int num;
-        if (numberOfQuestions != null && numberOfQuestions > 0) {
+        if (numberOfQuestions > 0) {
             num = numberOfQuestions;
         } else if (!shuffled.isEmpty()) {
             num = totalScore / shuffled.getFirst().getMarks();

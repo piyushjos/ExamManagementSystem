@@ -39,6 +39,7 @@ function StudentDashboard() {
             setLoading(true);
             const enrolled = await api.student.getEnrolledCourses();
             const exams = await api.student.getAvailableExams();
+
             const available = await api.student.getAvailableCourses();
             const results = await api.student.getResults();
             setEnrolledCourses(Array.isArray(enrolled) ? enrolled : []);
@@ -69,6 +70,7 @@ function StudentDashboard() {
     };
 
     const handleAttemptExam = (exam) => {
+        console.log("attempt exam",exam)
         // Check if result exists for this exam—if so, show the result and do not allow reattempt
         const existingResult = examResults.find(
             (result) => result.exam?.id === exam.id

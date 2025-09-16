@@ -139,6 +139,12 @@ public class InstructorServiceImpl implements InstructorService {
 
         exam.setCourse(course);
         exam.setPublished(false);
+        log.debug("createExam: before save, numberOfQuestions={}", exam.getNumberOfQuestions());
+        if (exam.getNumberOfQuestions() <= 0) {
+            exam.setNumberOfQuestions(
+                    (exam.getQuestions() != null) ? exam.getQuestions().size() : 0
+            );
+        }
         Exam saved = examRepository.save(exam);
         log.debug("createExam: saved examId={} courseId={}", saved.getId(), courseId);
         return saved;

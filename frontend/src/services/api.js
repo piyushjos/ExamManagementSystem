@@ -230,8 +230,10 @@ const api = {
       }
     },
     getExamDetails: async (examId) => {
+      console.log("hello",examId)
       try {
         const response = await axiosInstance.get(`/api/students/exams/${examId}`);
+        console.log("exam details===>", response)
         return response.data;
       } catch (error) {
         handleApiError(error);

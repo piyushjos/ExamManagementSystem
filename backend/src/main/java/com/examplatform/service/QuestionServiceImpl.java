@@ -14,11 +14,13 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public Question createQuestion(Question question) {
+        System.out.print(("my question" + question));
         return questionRepository.save(question);
     }
 
     @Override
     public List<Question> getQuestionsByExamId(Long examId) {
+        System.out.println("question list");
         return questionRepository.findByExamId(examId);
     }
 }

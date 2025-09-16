@@ -1,6 +1,9 @@
 package com.examplatform.dto;
 
+import com.examplatform.model.OptionValue;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class QuestionDTO {
@@ -10,6 +13,6 @@ public class QuestionDTO {
     private int marks;
     private boolean isCodeQuestion;
     private String codeSnippet;
-    private String options;       // This will be a JSON string of options
+    private List<OptionValue> options;       // This will be a JSON string of options
     private String correctAnswer; // The text of the correct option
 }

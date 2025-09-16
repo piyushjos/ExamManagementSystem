@@ -138,33 +138,45 @@ const TakeExamDialog = ({ open, onClose, examId }) => {
                           </Box>
                         )}
                         {question.options ? (
-                          <FormControl component="fieldset">
-                            <FormLabel component="legend">Select your answer:</FormLabel>
-                            <RadioGroup
-                              value={answers[question.id] || ""}
-                              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                            >
-                              {(() => {
-                                let optionsArr = [];
-                                try {
-                                  optionsArr =
-                                    typeof question.options === "string"
-                                      ? JSON.parse(question.options)
-                                      : question.options;
-                                } catch (err) {
-                                  console.error("Failed to parse options:", err);
-                                }
-                                return optionsArr.map((opt, index) => (
-                                  <FormControlLabel
-                                    key={index}
-                                    value={opt.optionText ? opt.optionText : opt}
-                                    control={<Radio />}
-                                    label={opt.optionText ? opt.optionText : opt}
-                                  />
-                                ));
-                              })()}
-                            </RadioGroup>
-                          </FormControl>
+                            <FormControl component="fieldset">
+                              <FormLabel component="legend">Select your answer:</FormLabel>
+                              <RadioGroup
+                                  value={answers[question.id] ?? ""}
+                                  onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                              >
+                                {(() => {
+                                  let optionsArr = [];
+                                  try {
+                                    optionsArr = Array.isArray(question.options)
+                                        ? question.options
+                                        : JSON.parse(question.options ?? "[]");
+                                  } catch (err) {
+                                    console.error("Failed to parse options:", err);
+                                  }
+
+                                  return optionsArr.map((opt, index) => {
+                                    // normalize to a safe text label
+                                    const text =
+                                        typeof opt === "string"
+                                            ? opt
+                                            : String(opt?.optionText ?? ""); // NEVER fall back to the object
+
+                                    const label = text.trim() === "" ? "(blank)" : text;
+
+                                    // value as the text (matches your server's correctAnswer = string)
+                                    return (
+                                        <FormControlLabel
+                                            key={index}
+                                            value={text}
+                                            control={<Radio />}
+                                            label={label}
+                                        />
+                                    );
+                                  });
+                                })()}
+                              </RadioGroup>
+                            </FormControl>
+
                         ) : (
                           <TextField
                             label="Your Answer"
