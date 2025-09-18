@@ -18,6 +18,8 @@ public class ExamResult {
     @JoinColumn(name = "exam_id", nullable = false)
     private Exam exam;
 
+
+
     @Column(nullable = false)
     private int score;
 
