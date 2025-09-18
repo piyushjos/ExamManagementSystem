@@ -1,24 +1,39 @@
-#version: '3.8'
+# docker-compose.yml
 services:
-  app:
-    build: .
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/exam_platform
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: rootpassword
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
   db:
-    image: mysql:8.0
-    ports:
-      - "3306:3306"
+    image: mysql:8.0                         # Official MySQL image
+    container_name: mysqldb
+    restart: unless-stopped                  # Auto-restart if it crashes
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: exam_platform
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}   # from .env
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"                          # Expose to host (optional for local tools)
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql            # Persist data between restarts
+      - ./sql:/docker-entrypoint-initdb.d:ro # Run *.sql on first init
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .                                  # Build image from Dockerfile in current folder
+    container_name: springapp
+    depends_on:
+      db:
+        condition: service_healthy            # Wait for MySQL healthcheck to pass
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      # SPRING_PROFILES_ACTIVE: docker        # Uncomment if you use a docker profile
+    ports:
+      - "${APP_PORT}:8080"                    # Map host 8080 -> container 8080
+    restart: unless-stopped
+
 volumes:
-  mysql_data:
+  mysql_data:                                 # Named volume for MySQL files
