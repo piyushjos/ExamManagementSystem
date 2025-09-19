@@ -1,0 +1,160 @@
+/*
+====================================================
+ Exam Platform Database Schema
+ Author: <Your Name>
+ Created: 2025-09-18
+ Purpose: Core schema for Exam Management System
+====================================================
+
+Contents:
+  - course              : Master list of courses
+  - course_instructor   : Mapping of instructors assigned to courses
+  - course_student      : Mapping of students enrolled in courses
+  - exam                : Exams associated with courses
+  - exam_result         : Results of students for exams
+  - question            : Questions belonging to exams
+  - roles               : User roles (Admin, Instructor, Student, etc.)
+  - users               : Application users
+====================================================
+*/
+
+/* -------------------------------------------------
+   COURSES
+   Stores course catalog with name, description, and
+   maximum capacity.
+------------------------------------------------- */
+CREATE TABLE `course` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `capacity` int unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_courses_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* -------------------------------------------------
+   COURSE_INSTRUCTOR
+   Junction table linking courses and instructors.
+   One instructor can teach many courses, and one
+   course can have multiple instructors.
+------------------------------------------------- */
+CREATE TABLE `course_instructor` (
+  `course_id` bigint unsigned NOT NULL,
+  `instructor_id` bigint NOT NULL,
+  `assigned_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`course_id`,`instructor_id`),
+  KEY `idx_ci_instructor` (`instructor_id`),
+  CONSTRAINT `fk_ci_course` FOREIGN KEY (`course_id`)
+      REFERENCES `course` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_ci_instructor` FOREIGN KEY (`instructor_id`)
+      REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* -------------------------------------------------
+   COURSE_STUDENT
+   Junction table linking courses and students.
+   Tracks enrollments with timestamp.
+------------------------------------------------- */
+CREATE TABLE `course_student` (
+  `course_id` bigint unsigned NOT NULL,
+  `student_id` bigint NOT NULL,
+  `enrolled_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`course_id`,`student_id`),
+  KEY `fk_cs_student` (`student_id`),
+  CONSTRAINT `fk_cs_course` FOREIGN KEY (`course_id`)
+      REFERENCES `course` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_cs_student` FOREIGN KEY (`student_id`)
+      REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* -------------------------------------------------
+   EXAM
+   Stores exam metadata linked to a course.
+   Includes duration, max attempts, passing score, etc.
+------------------------------------------------- */
+CREATE TABLE `exam` (
+  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `DURATION` int unsigned NOT NULL,
+  `MAX_ATTEMPTS` int unsigned NOT NULL,
+  `NUMBER_OF_QUESTIONS` int unsigned NOT NULL,
+  `PASSING_SCORE` int unsigned NOT NULL,
+  `PUBLISHED` tinyint(1) NOT NULL,
+  `TITLE` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `TOTAL_SCORE` int unsigned NOT NULL,
+  `COURSE_ID` bigint unsigned NOT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `fk_exam_course` (`COURSE_ID`),
+  CONSTRAINT `fk_exam_course` FOREIGN KEY (`COURSE_ID`)
+      REFERENCES `course` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* -------------------------------------------------
+   EXAM_RESULT
+   Stores student exam results with score, status,
+   and foreign keys to exam and student.
+------------------------------------------------- */
+CREATE TABLE `exam_result` (
+  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `SCORE` int unsigned NOT NULL,
+  `STATUS` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `EXAM_ID` bigint unsigned NOT NULL,
+  `STUDENT_ID` bigint NOT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `fk_exam_result_exam` (`EXAM_ID`),
+  KEY `fk_exam_result_student` (`STUDENT_ID`),
+  CONSTRAINT `fk_exam_result_exam` FOREIGN KEY (`EXAM_ID`)
+      REFERENCES `exam` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_exam_result_student` FOREIGN KEY (`STUDENT_ID`)
+      REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* -------------------------------------------------
+   QUESTION
+   Stores exam questions with multiple options in JSON,
+   correct answer, and marks assigned.
+------------------------------------------------- */
+CREATE TABLE `question` (
+  `ID` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `CORRECT_ANSWER` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `MARKS` int unsigned NOT NULL,
+  `OPTIONS` json NOT NULL,
+  `TEXT` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `EXAM_ID` bigint unsigned NOT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `fk_question_exam` (`EXAM_ID`),
+  CONSTRAINT `fk_question_exam` FOREIGN KEY (`EXAM_ID`)
+      REFERENCES `exam` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* -------------------------------------------------
+   ROLES
+   Stores system roles (Admin, Instructor, Student).
+   Referenced by users table.
+------------------------------------------------- */
+CREATE TABLE `roles` (
+  `role_id` bigint NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`role_id`),
+  UNIQUE KEY `name` (`role_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* -------------------------------------------------
+   USERS
+   Stores application users with role references.
+   Includes authentication fields and audit timestamps.
+------------------------------------------------- */
+CREATE TABLE `users` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `email` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `role_id` bigint NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `idx_users_role_id` (`role_id`),
+  CONSTRAINT `fk_users_role` FOREIGN KEY (`role_id`)
+      REFERENCES `roles` (`role_id`) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
