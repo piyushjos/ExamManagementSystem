@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/admin")
 public class AnalyticsController {
     private final AnalyticsService service;
     public AnalyticsController(AnalyticsService service) { this.service = service; }

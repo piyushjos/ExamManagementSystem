@@ -9,4 +9,6 @@ public class LoginResponse {
     private String role;
     private String email;
     private String message;
+    private String accessToken;
+    private String tokenType = "Bearer";
 }

@@ -6,6 +6,7 @@ import com.examplatform.model.Role;
 import com.examplatform.model.User;
 import com.examplatform.repository.RoleRepository;
 import com.examplatform.repository.UserRepository;
+import com.examplatform.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,15 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.examplatform.security.JwtService jwtService;
 
 
     @Autowired
-    public AuthServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder){
+    public AuthServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder,  com.examplatform.security.JwtService jwtService){
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @Override
@@ -84,10 +87,17 @@ public class AuthServiceImpl implements AuthService {
             log.error("Failed to process id");
             throw new RuntimeException("Invalid password");
         }
+        var roles = java.util.List.of(user.getRole().getRoleName()); // e.g., ["STUDENT"]
+        String token = jwtService.issue(user.getEmail(), roles, java.time.Duration.ofMinutes(30));
+        System.out.println("my genrated token " + token);
+
+
         LoginResponse response = new LoginResponse();
         response.setEmail(user.getEmail());
         response.setRole(user.getRole().getRoleName());
         response.setMessage("Login successful");
+        response.setAccessToken(token);
+
         return response;
     }
 }
