@@ -158,3 +158,10 @@ CREATE TABLE `users` (
   CONSTRAINT `fk_users_role` FOREIGN KEY (`role_id`)
       REFERENCES `roles` (`role_id`) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/* ====================================================
+   Done ✅
+   Next Steps:
+   - Start your backend (Spring Boot)
+   - Use frontend to create instructors, courses, exams, etc.
+==================================================== */

@@ -3,6 +3,7 @@ package com.examplatform.service;
 import com.examplatform.exception.ResourceNotFoundException;
 import com.examplatform.model.*;
 import com.examplatform.repository.*;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -13,8 +14,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class StudentServiceImpl implements StudentService {
 
     private final UserRepository userRepository;
@@ -45,18 +48,22 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public Course enrollInCourse(Long courseId) {
         User student = getCurrentStudent();
+        log.info("Fetching enrolled courses for student: {}", student.getEmail());
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Course not found"));
         if (course.getEnrolledStudents().contains(student)) {
             throw new RuntimeException("Already enrolled in course");
         }
         course.getEnrolledStudents().add(student);
+        log.debug("Student {} enrolled in ", student.getEmail());
         return courseRepository.save(course);
     }
 
     @Override
     public List<Exam> getAvailableExams() {
+
         User student = getCurrentStudent();
+        log.info("Fetching available exams: {}", student.getEmail());
         List<Course> courses = courseRepository.findByEnrolledStudentsId(student.getId());
         return courses.stream()
                 .flatMap(course -> examRepository.findByCourseId(course.getId()).stream())
@@ -74,9 +81,11 @@ public class StudentServiceImpl implements StudentService {
     @Transactional
     public String submitExam(Long examId, List<String> answers, List<Long> questionIds) {
         User student = getCurrentStudent();
+        log.info("Student {} submitting exam ID {}", student.getEmail(), examId);
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
         long attempts = examResultRepository.countByStudentIdAndExamId(student.getId(), exam.getId());
+        log.debug("Student {} has {} previous attempts for exam {}", student.getEmail(), attempts, examId);
         if (attempts >= exam.getMaxAttempts()) {
             throw new RuntimeException("Exam already submitted");
         }
@@ -113,6 +122,8 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public List<ExamResult> getResults() {
         User student = getCurrentStudent();
+        log.info("MDC userId in service: {}", MDC.get("userId"));
+        log.info("Fetching results for student1111");
         return examResultRepository.findByStudentId(student.getId());
     }
 
