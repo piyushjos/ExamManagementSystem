@@ -97,7 +97,16 @@ public class StudentServiceImpl implements StudentService {
         // Calculate the count of correct answers
         int correctCount = calculateScore(questions, answers);
         // Each question is worth 5 points.
-        int pointsEarned = correctCount * 5;
+//        int pointsEarned = correctCount * 5;
+        int pointsEarned = 0;
+        for (int i = 0; i < questions.size(); i++) {
+            Question q = questions.get(i);
+            String givenAnswer = answers.get(i);
+            if (q.getCorrectAnswer().equalsIgnoreCase(givenAnswer.trim())) {
+                pointsEarned += q.getMarks(); // ✅ use dynamic marks
+            }
+        }
+
         ExamResult result = new ExamResult();
         result.setStudent(student);
         result.setExam(exam);

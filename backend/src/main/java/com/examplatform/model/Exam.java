@@ -64,11 +64,28 @@ public class Exam {
             org.slf4j.LoggerFactory.getLogger(Exam.class);
     @PrePersist
     @PreUpdate
-    private void ensureNumberOfQuestions() {
+    private void beforeSaveOrUpdate() {
+        // --- 1️⃣ Ensure number of questions ---
         if (this.numberOfQuestions <= 0) {
             this.numberOfQuestions = (this.questions != null) ? this.questions.size() : 0;
         }
+
+        // --- 2️⃣ Distribute total marks equally among all questions ---
+        if (this.questions != null && !this.questions.isEmpty()) {
+            int marksPerQuestion = (int) Math.ceil((double) this.totalScore / this.questions.size());
+            for (Question q : this.questions) {
+                q.setMarks(marksPerQuestion);
+                q.setExam(this);
+            }
+
+            // --- 3️⃣ Update totalScore & passingScore dynamically ---
+            this.totalScore = this.questions.stream()
+                    .mapToInt(Question::getMarks)
+                    .sum();
+            this.passingScore = (int) Math.ceil(this.totalScore * 0.3);
+        }
     }
+
 
 
     @JsonIgnore
@@ -100,5 +117,11 @@ public class Exam {
         randomized.setMaxAttempts(this.maxAttempts);
         return randomized;
     }
+
+
+
+
 }
+
+
 
