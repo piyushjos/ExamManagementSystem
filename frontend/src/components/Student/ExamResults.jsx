@@ -23,6 +23,7 @@ function ExamResults() {
   }, []);
 
   const loadResults = async () => {
+    console.log("it is called load result")
     try {
       setLoading(true);
       const data = await api.student.getResults();

@@ -9,9 +9,11 @@ import StudentDashboard from "./components/Student/StudentDashBoard";
 import AvailableExams from "./components/Student/AvailableExams";
 import TakeExam from "./components/Student/TakeExamDialog";
 import ExamResults from "./components/Student/ExamResults";
+import StudentGpaTable from "./components/Admin/StudentGpaTable"
 
 const ProtectedRoute = ({ children, allowedRole }) => {
   const role = localStorage.getItem("role");
+  console.log(role)
   if (!role) return <Navigate to="/" replace />;
   if (role !== allowedRole) return <Navigate to="/" replace />;
   return children;
@@ -32,6 +34,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+            <Route
+                path="/admin/viewAnalytics"
+                element={
+                    <ProtectedRoute allowedRole="ADMIN">
+                        <StudentGpaTable />
+                    </ProtectedRoute>
+                }
+            />
           <Route
             path="/instructor/*"
             element={
@@ -40,6 +51,7 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/student/dashboard"
             element={

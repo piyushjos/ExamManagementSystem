@@ -28,6 +28,7 @@ import AnalyticsIcon from "@mui/icons-material/Analytics";
 import SearchIcon from "@mui/icons-material/Search";
 import InputAdornment from "@mui/material/InputAdornment";
 import api from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 function AdminDashboard() {
   const [instructors, setInstructors] = useState([]);
@@ -40,6 +41,7 @@ function AdminDashboard() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [assignLoading, setAssignLoading] = useState(false);
+  const navigate = useNavigate();
 
   const loadInstructors = async () => {
     try {
@@ -136,7 +138,7 @@ function AdminDashboard() {
             description="Overview of system metrics"
             buttonText="View Analytics"
             icon={<AnalyticsIcon sx={{ fontSize: 40 }} />}
-            onClick={() => {}}
+            onClick={() => navigate("/admin/viewAnalytics")}
             bgColor="linear-gradient(135deg, #FF9800, #FFB74D)"
           />
         </Grid>

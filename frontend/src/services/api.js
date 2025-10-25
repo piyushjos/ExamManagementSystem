@@ -1,4 +1,5 @@
 import axiosInstance from '../utils/axiosConfig';
+import {setToken} from "../services/token.js"
 
 const handleApiError = (error) => {
   if (error.response) {
@@ -21,6 +22,7 @@ const api = {
           email: credentials.email,
           password: credentials.password,
         });
+        setToken(response.data.accessToken)
         console.log('Login response:', response.data);
         return response.data;
       } catch (error) {
@@ -104,7 +106,7 @@ const api = {
     },
     getAnalytics: async () => {
       try {
-        const response = await axiosInstance.get('/api/admin/analytics');
+        const response = await axiosInstance.get('/api/gpa');
         return response.data;
       } catch (error) {
         handleApiError(error);
@@ -138,8 +140,10 @@ const api = {
       }
     },
     createExam: async (examData) => {
+      console.log(examData)
       try {
         const response = await axiosInstance.post('/api/instructor/exams', examData);
+        console.log("question data to be send===>",response)
         return response.data;
       } catch (error) {
         handleApiError(error);
@@ -249,6 +253,7 @@ const api = {
     },
     
     getResults: async () => {
+      console.log("called get result")
       try {
         const response = await axiosInstance.get('/api/students/results');
         return response.data;

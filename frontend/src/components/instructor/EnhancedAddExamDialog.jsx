@@ -172,7 +172,7 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
       return {
         text: q.text,
         marks: q.marks, // always 5
-        options: JSON.stringify(q.options),
+        options: q.options,
         correctAnswer: correctOption ? correctOption.optionText : "",
         isCodeQuestion: q.isCodeQuestion,
         codeSnippet: q.codeSnippet,
