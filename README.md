@@ -1,4 +1,4 @@
-# Exam Platform
+# ExamPilot
 
 > Web app for creating and taking exams. Backend in **Java (Spring Boot, Maven)**, frontend in **React (Vite)** with **Material-UI** and **Axios**.
 > **Database:** MySQL for local and production (migrated from H2).

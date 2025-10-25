@@ -1,2 +1,9 @@
 frontend/node_modules/
 backend/target/
+logs/
+**/logs/
+*.log
+*.log.*
+*.out
+*.gz
+
