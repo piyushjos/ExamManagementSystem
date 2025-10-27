@@ -3,6 +3,36 @@
 > Web app for creating and taking exams. Backend in **Java (Spring Boot, Maven)**, frontend in **React (Vite)** with **Material-UI** and **Axios**.
 > **Database:** MySQL for local and production (migrated from H2).
 > **Deploy:** AWS **S3** (frontend) + **EC2** (backend) + **RDS MySQL**.
+> 
+> ## Main Features
+
+### 👥 Roles & Access
+- **Role-based access control:** Admin / Instructor / Student
+- **JWT auth flow:** login, protected APIs, copy-paste `curl` to verify
+
+### 🎓 Student
+- **Register & enroll:** sign up and join available courses
+- **Take exams:** timed/untimed attempts with instant submission
+- **View GPA & results:** see scores and overall GPA across courses
+
+### 🧑‍🏫 Instructor
+- **Course ownership:** teach courses assigned by Admin
+- **Question management:** create, edit, and organize questions
+- **Exam lifecycle:** **publish** / **unpublish** exams on demand
+
+### 🛠️ Admin
+- **User & course administration:** create users, create courses
+- **Assignments:** assign courses to instructors
+
+### 📊 Data & Persistence
+- **MySQL-backed storage:** production-ready persistence (H2 → MySQL migration)
+- **ER diagram included:** quick view of the data model
+
+### 🚀 Deployment
+- **Frontend:** AWS **S3** (SPA)
+- **Backend:** AWS **EC2** running **Spring Boot** via **Docker**
+- **Database:** AWS **RDS (MySQL)**
+
 
 
 
