@@ -1,62 +1,11 @@
-# ExamPilot
-
-> Web app for creating and taking exams. Backend in **Java (Spring Boot, Maven)**, frontend in **React (Vite)** with **Material-UI** and **Axios**.
-> **Database:** MySQL for local and production (migrated from H2).
-> **Deploy:** AWS **S3** (frontend) + **EC2** (backend) + **RDS MySQL**.
-> 
-> ## Main Features
-
-### 👥 Roles & Access
-- **Role-based access control:** Admin / Instructor / Student
-- **JWT auth flow:** login, protected APIs, copy-paste `curl` to verify
-
-### 🎓 Student
-- **Register & enroll:** sign up and join available courses
-- **Take exams:** timed/untimed attempts with instant submission
-- **View GPA & results:** see scores and overall GPA across courses
-
-### 🧑‍🏫 Instructor
-- **Course ownership:** teach courses assigned by Admin
-- **Question management:** create, edit, and organize questions
-- **Exam lifecycle:** **publish** / **unpublish** exams on demand
-
-### 🛠️ Admin
-- **User & course administration:** create users, create courses
-- **Assignments:** assign courses to instructors
-
-### 📊 Data & Persistence
-- **MySQL-backed storage:** production-ready persistence (H2 → MySQL migration)
-- **ER diagram included:** quick view of the data model
-
-### 🚀 Deployment
-- **Frontend:** AWS **S3** (SPA)
-- **Backend:** AWS **EC2** running **Spring Boot** via **Docker**
-- **Database:** AWS **RDS (MySQL)**
-
-
-
-
-### Key Highlights
-- **Real AWS deployment:** S3 (SPA) + EC2 (Spring Boot via Docker) + RDS (MySQL)
-- **Dockerized backend:** reproducible builds & consistent runtime across environments
-- **DB migration:** H2 → MySQL (production-ready persistence)
-- **Fast setup:** 5-minute local run with clear MySQL instructions
-- **ER diagram included:** quick view of data model
-- **Auth flow verified:** copy-paste `curl` to test login
-
-
-
-
----
-
 ## Table of Contents
-
-* [ER Diagram](#er-diagram)
+* [Project Description](#ExamPilot)
+* [Main Features](#main-features)
 * [Tech Stack](#tech-stack)
-* [Architecture (deployed)](#architecture-deployed)
-* [Design Decisions (brief)](#design-decisions-brief)
-* [Containerization (Docker)](#containerization-docker)
+* [ER Diagram](#er-diagram)
 * [Screenshots / Demo](#screenshots--demo)
+* [Aws Deployment Architecture](#aws-deployment-architecture)
+* [Containerization (Docker)](#containerization-docker)
 * [Backend Setup](#backend-setup)
 
   * [Clone](#clone)
@@ -73,45 +22,83 @@
 
 ---
 
+
+
+# ExamPilot
+ExamPilot is a role-based web app where Admins manage users and courses, Instructors create questions and publish or unpublish exams, and Students enroll and take exams. Students can view their results and overall GPA after submissions. The app provides clear flows for registration, course enrollment, taking exams, and viewing scores.
+# Main Features
+
+### 👥 Roles & Access
+- **Role-based access control:** Admin / Instructor / Student
+- **JWT auth flow:** login + protected APIs (copy-paste `curl` to verify)
+
+### 🎓 Student
+- **Register & enroll:** sign up and join available courses
+- **Take exams:** timed/untimed attempts with instant submission
+- **View GPA & results:** see scores and overall GPA across courses
+
+### 🧑‍🏫 Instructor
+- **Course ownership:** teach courses assigned by Admin
+- **Question management:** create, edit, and organize questions
+- **Exam lifecycle:** **publish** / **unpublish** exams on demand
+
+### 🛠️ Admin
+- **User & course administration:** create users, create courses
+- **Assignments:** assign courses to instructors
+
+
+
+
+## Tech Stack
+
+### Frontend
+- **React (Vite)**
+- **Material-UI**
+- **Axios** for API calls
+
+### Backend
+- **Java (Spring Boot, Maven)**
+- **Spring Security (JWT)** for auth
+- **Spring Data JPA** for persistence
+
+### Database
+- **MySQL** (local & production)
+- **H2 → MySQL** migration for prod-ready persistence
+
+
+
+
+
+### Infrastructure & Deployment
+- **Docker** (containerized backend)
+- **AWS S3** (SPA hosting)
+- **AWS EC2** (Spring Boot container)
+- **AWS RDS (MySQL)**
+
+### Dev & Build
+- **Maven** (backend build)
+- **Node.js + npm** (frontend build)
+
+
+
+## Screenshots / Demo
+![image1](docs/images/image1.png)
+![image2](docs/images/image2.png)
+![image3](docs/images/image3.png)
+![image4](docs/images/image4.png)
+
+
 ## ER Diagram
 
 
 
 ![ER Diagram](Er.png)
 
----
 
-## Tech Stack
-
-* **Backend:** Java 17, Spring Boot, Maven
-* **Database:** MySQL 8 (local + prod)
-* **Frontend:** React (Vite), Material-UI, Axios
-* **IDE:** IntelliJ IDEA
-
-## Architecture (deployed)
-
-```
-React (Vite, S3)
-      ↓ (HTTP/CORS)
-Spring Boot API (EC2, Docker)
-      ↓ (JDBC over SG 3306)
-MySQL (RDS)
-```
-
+## Aws Deployment Architecture
 * **S3** serves the SPA; requests go to **EC2**.
 * **EC2 ↔ RDS** allowed via security groups (3306).
 * **CORS**: backend allows the S3 website origin.
-
-## Design Decisions (brief)
-
-* **MySQL over H2** for persistent, production‑ready storage and smooth RDS migration.
-* **Spring Boot** for rapid REST setup and familiar security stack.
-* **Vite + React + MUI** for fast dev and consistent UI.
-* **Environment‑based config** to switch local MySQL ↔ RDS by properties only.
-* **Container image** published and run on EC2 for consistent runtime.
-* **Single curl sanity check** so anyone can verify auth works immediately.
-
----
 
 ## Backend Setup
 
@@ -121,11 +108,6 @@ MySQL (RDS)
 git clone <repository-url>
 cd exam-platform
 ```
-
-### Open in IntelliJ
-
-1. **File → Open…** → choose `exam-platform`
-2. Wait for Maven import to finish
 
 ### Install Dependencies
 
@@ -226,26 +208,6 @@ From the backend project root (where your `pom.xml` lives):
 docker build -t exam-backend:latest .
 ```
 
-**Example `Dockerfile` (backend)**
-
-```dockerfile
-# Build stage
-FROM maven:3.9-eclipse-temurin-17 AS build
-WORKDIR /app
-COPY pom.xml .
-COPY src ./src
-RUN mvn -q -DskipTests clean package
-
-# Run stage
-FROM eclipse-temurin:17-jre
-WORKDIR /app
-COPY --from=build /app/target/*SNAPSHOT.jar app.jar
-EXPOSE 8080
-# Pass DB creds via env at runtime
-ENV JAVA_OPTS=""
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]
-```
-
 ### Run locally with Docker (pointing to local MySQL)
 
 ```bash
@@ -264,7 +226,7 @@ Initialize the project:
 
 ```bash
 npm create vite@latest exam-portal-frontend --template react
-cd exam-portal-frontend
+cd exam-portal
 npm install
 ```
 
@@ -275,7 +237,7 @@ npm install @mui/material @emotion/react @emotion/styled
 npm install axios
 ```
 
-Suggested structure:
+ File Structure:
 
 ```
 exam-portal-frontend/
