@@ -17,6 +17,11 @@ public class CorsConfig {
         c.setAllowedOriginPatterns(List.of(
                 "http://my-exam-portal-frontend.s3-website-us-east-1.amazonaws.com"
         ));
+        c.setAllowedOriginPatterns(List.of("*"));   // TEMP ONLY for diagnosis
+        c.addAllowedHeader("*");
+        c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+        c.setAllowCredentials(true);
+
         c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         c.setAllowedHeaders(List.of("Content-Type","Authorization","Accept","Origin"));
         c.addAllowedHeader("*");
