@@ -14,12 +14,14 @@ public class CorsConfig {
 
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration c = new CorsConfiguration();
-        c.setAllowedOrigins(List.of(
+        c.setAllowedOriginPatterns(List.of(
                 "http://my-exam-portal-frontend.s3-website-us-east-1.amazonaws.com"
         ));
         c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         c.setAllowedHeaders(List.of("Content-Type","Authorization","Accept","Origin"));
+        c.addAllowedHeader("*");
         c.setAllowCredentials(true); // if you use cookies; ok for token too
+        c.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
         src.registerCorsConfiguration("/**", c);
         return src;

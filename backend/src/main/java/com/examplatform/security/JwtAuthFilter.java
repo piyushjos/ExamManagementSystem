@@ -21,6 +21,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwt;
 
     public JwtAuthFilter(JwtService jwt) { this.jwt = jwt; }
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest req) {
+        // Never run for preflight; also skip auth endpoints
+        return "OPTIONS".equalsIgnoreCase(req.getMethod())
+                || req.getServletPath().startsWith("/api/auth/");
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
