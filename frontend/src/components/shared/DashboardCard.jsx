@@ -15,13 +15,13 @@ const DashboardCard = ({ title, description, buttonText, icon, onClick, bgColor 
           overflow: "hidden",
           borderRadius: 3,
           p: 3,
-          background: bgColor || "linear-gradient(135deg, #1976D2, #64B5F6)",
+          background: bgColor || "linear-gradient(135deg, #6366F1, #818CF8)",
           color: "#fff",
-          boxShadow: 3,
+          boxShadow: "0 24px 45px rgba(79, 70, 229, 0.25)",
           transition: "transform 0.3s ease, box-shadow 0.3s ease",
           "&:hover": {
             transform: "translateY(-4px)",
-            boxShadow: 6,
+            boxShadow: "0 28px 50px rgba(79, 70, 229, 0.3)",
           },
           "&::before": {
             content: '""',
@@ -37,9 +37,35 @@ const DashboardCard = ({ title, description, buttonText, icon, onClick, bgColor 
           "&:hover::before": {
             opacity: 1,
           },
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            width: 160,
+            height: 160,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.12)",
+            top: -60,
+            right: -60,
+            filter: "blur(0)",
+          },
         }}
       >
-        <Box sx={{ mb: 2, opacity: 0.9 }}>{icon}</Box>
+        <Box
+          sx={{
+            mb: 2.5,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 56,
+            height: 56,
+            borderRadius: "18px",
+            backgroundColor: "rgba(255,255,255,0.18)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.3)",
+            color: "#fff",
+          }}
+        >
+          {icon}
+        </Box>
         <Typography variant="h6" fontWeight="bold" gutterBottom>
           {title}
         </Typography>
@@ -49,13 +75,15 @@ const DashboardCard = ({ title, description, buttonText, icon, onClick, bgColor 
         <Box sx={{ mt: "auto" }}>
           <Button
             variant="contained"
-            color="inherit"
             onClick={onClick}
             sx={{
-              bgcolor: "rgba(255,255,255,0.15)",
+              bgcolor: "rgba(255,255,255,0.22)",
+              backdropFilter: "blur(6px)",
+              color: "#fff",
               fontWeight: 600,
+              px: 3,
               "&:hover": {
-                bgcolor: "rgba(255,255,255,0.25)",
+                bgcolor: "rgba(255,255,255,0.32)",
               },
             }}
           >

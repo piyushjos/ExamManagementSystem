@@ -297,6 +297,21 @@ const api = {
         handleApiError(error);
       }
     },
+    ai: {
+      generateQuestions: async ({ topic, numQuestions, marksPerQuestion }) => {
+        try {
+          const response = await axiosInstance.post("/api/ai/generate-questions", {
+            topic,
+            numQuestions,
+            marksPerQuestion,
+          });
+          console.log(response.data)
+          return response.data; // this will be the array from backend
+        } catch (error) {
+          handleApiError(error);
+        }
+      },
+    },
   },
 };
 

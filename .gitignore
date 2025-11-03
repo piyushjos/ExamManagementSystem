@@ -6,4 +6,5 @@ logs/
 *.log.*
 *.out
 *.gz
+backend/.env
 

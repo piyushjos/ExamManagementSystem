@@ -7,11 +7,11 @@ import {
     CardContent,
     Button,
     CircularProgress,
+    Paper,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    Divider,
 } from "@mui/material";
 import DashboardLayout from "../shared/DashboardLayout";
 import DashboardCard from "../shared/DashboardCard";
@@ -90,9 +90,11 @@ function StudentDashboard() {
     if (loading) {
         return (
             <DashboardLayout title="Student Dashboard">
-                <Box sx={{ p: 3, textAlign: "center" }}>
+                <Box sx={{ textAlign: "center", py: 12 }}>
                     <CircularProgress />
-                    <Typography>Loading...</Typography>
+                    <Typography sx={{ mt: 2 }}>
+                        Loading your dashboard...
+                    </Typography>
                 </Box>
             </DashboardLayout>
         );
@@ -100,64 +102,129 @@ function StudentDashboard() {
 
     return (
         <DashboardLayout title="Student Dashboard">
-            <Box sx={{ p: 3 }}>
-                <Typography variant="h4" gutterBottom>
-                    Student Dashboard
-                </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                <Box>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                        Your learning hub
+                    </Typography>
+                    <Typography
+                        variant="body1"
+                        color="text.secondary"
+                        sx={{ mt: 1 }}
+                    >
+                        Track course progress, attempt exams, and review
+                        outcomes in one intuitive space.
+                    </Typography>
+                </Box>
                 {error && (
-                    <Typography color="error" sx={{ mb: 2 }}>
+                    <Typography color="error" sx={{ mt: 2 }}>
                         {error}
                     </Typography>
                 )}
-                {/* Enrolled Courses Section */}
-                <Typography variant="h5" sx={{ mt: 4 }}>
-                    Enrolled Courses
-                </Typography>
+
                 {enrolledCourses.length === 0 ? (
-                    <Typography sx={{ mt: 2 }}>
-                        You are not enrolled in any courses.
-                    </Typography>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 4,
+                            borderRadius: 3,
+                            border: "1px dashed rgba(79, 70, 229, 0.3)",
+                            textAlign: "center",
+                            background:
+                                "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(14,165,233,0.08))",
+                        }}
+                    >
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            No enrolled courses yet
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{ mt: 1.5, mb: 3 }}
+                        >
+                            Enroll in courses to start preparing for your
+                            upcoming exams.
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            onClick={() => setOpenEnrollDialog(true)}
+                        >
+                            Browse available courses
+                        </Button>
+                    </Paper>
                 ) : (
-                    <Grid container spacing={3} sx={{ mt: 2 }}>
-                        {enrolledCourses.map((course) => (
-                            <Grid item xs={12} sm={6} md={4} key={course.id}>
-                                <Card sx={{ p: 2 }}>
-                                    <CardContent>
-                                        <Typography variant="h6">
-                                            {course.name}
-                                        </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            color="text.secondary"
+                    <Box>
+                        <Typography
+                            variant="h5"
+                            sx={{ fontWeight: 600, mb: 2 }}
+                        >
+                            Enrolled Courses
+                        </Typography>
+                        <Grid container spacing={3}>
+                            {enrolledCourses.map((course) => (
+                                <Grid item xs={12} sm={6} md={4} key={course.id}>
+                                    <Card
+                                        sx={{
+                                            height: "100%",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            background:
+                                                "linear-gradient(155deg, rgba(255,255,255,0.95), rgba(255,255,255,0.78))",
+                                            border: "1px solid rgba(79, 70, 229, 0.12)",
+                                        }}
+                                    >
+                                        <CardContent
+                                            sx={{
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: 1,
+                                            }}
                                         >
-                                            {course.description}
-                                        </Typography>
-                                        <Typography
-                                            variant="body2"
-                                            sx={{ mt: 1 }}
-                                        >
-                                            Instructor:{" "}
-                                            {course.instructors &&
-                                            course.instructors.length > 0
-                                                ? course.instructors[0].email
-                                                : "Not assigned"}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
+                                            <Typography
+                                                variant="h6"
+                                                sx={{ fontWeight: 600 }}
+                                            >
+                                                {course.name}
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                color="text.secondary"
+                                            >
+                                                {course.description ||
+                                                    "No course description provided."}
+                                            </Typography>
+                                            <Typography
+                                                variant="caption"
+                                                color="text.secondary"
+                                                sx={{ mt: 1 }}
+                                            >
+                                                Instructor
+                                            </Typography>
+                                            <Typography
+                                                variant="body2"
+                                                sx={{ fontWeight: 500 }}
+                                            >
+                                                {course.instructors &&
+                                                course.instructors.length > 0
+                                                    ? course.instructors[0].email
+                                                    : "Not assigned"}
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
                 )}
 
-                {/* Dashboard Cards */}
-                <Grid container spacing={3} sx={{ mt: 4 }}>
+                <Grid container spacing={3}>
                     <DashboardCard
                         title="Available Courses"
                         description={`${availableCourses.length} Courses`}
                         buttonText="Enroll"
                         icon={<SubjectIcon />}
                         onClick={() => setOpenEnrollDialog(true)}
-                        bgColor="linear-gradient(135deg, #2196F3, #64B5F6)"
+                        bgColor="linear-gradient(135deg, #6366F1, #818CF8)"
                     />
                     <DashboardCard
                         title="Exam Results"
@@ -165,21 +232,57 @@ function StudentDashboard() {
                         buttonText="View Results"
                         icon={<DetailsIcon />}
                         onClick={() => navigate("/student/results")}
-                        bgColor="linear-gradient(135deg, #FF9800, #FFB74D)"
+                        bgColor="linear-gradient(135deg, #14B8A6, #22D3EE)"
                     />
                 </Grid>
 
-                {/* Available Exams Section – Always Visible */}
-                <Box sx={{ mt: 4 }}>
-                    <Typography variant="h4" gutterBottom>
-                        Available Exams
-                    </Typography>
-                    {availableExams.length === 0 ? (
-                        <Typography>
-                            No exams available at the moment.
+                <Paper
+                    elevation={0}
+                    sx={{
+                        borderRadius: 3,
+                        border: "1px solid rgba(148, 163, 184, 0.25)",
+                        background: "rgba(255,255,255,0.92)",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            px: { xs: 2.5, md: 3.5 },
+                            py: { xs: 2.5, md: 3 },
+                            borderBottom: "1px solid rgba(148, 163, 184, 0.25)",
+                            display: "flex",
+                            flexDirection: { xs: "column", md: "row" },
+                            alignItems: { md: "center" },
+                            justifyContent: "space-between",
+                            gap: 1.5,
+                            background:
+                                "linear-gradient(120deg, rgba(79,70,229,0.08), rgba(6,182,212,0.08))",
+                        }}
+                    >
+                        <Box>
+                            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                                Available Exams
+                            </Typography>
+                            <Typography
+                                variant="body2"
+                                color="text.secondary"
+                            >
+                                Attempt exams when ready and monitor attempts at
+                                a glance.
+                            </Typography>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                            {availableExams.length} exam
+                            {availableExams.length === 1 ? "" : "s"} available
                         </Typography>
+                    </Box>
+                    {availableExams.length === 0 ? (
+                        <Box sx={{ py: 5, textAlign: "center" }}>
+                            <Typography>
+                                No exams available at the moment.
+                            </Typography>
+                        </Box>
                     ) : (
-                        availableExams.map((exam) => {
+                        availableExams.map((exam, index) => {
                             const examResult = examResults.find(
                                 (result) => result.exam?.id === exam.id
                             );
@@ -187,13 +290,21 @@ function StudentDashboard() {
                                 <Box
                                     key={exam.id}
                                     sx={{
-                                        mb: 2,
-                                        p: 2,
-                                        border: "1px solid #ccc",
-                                        borderRadius: 2,
+                                        px: { xs: 2.5, md: 3.5 },
+                                        py: { xs: 2.5, md: 3 },
+                                        borderBottom:
+                                            index ===
+                                            availableExams.length - 1
+                                                ? "none"
+                                                : "1px solid rgba(148, 163, 184, 0.18)",
+                                        display: "grid",
+                                        gap: 0.75,
                                     }}
                                 >
-                                    <Typography variant="h6">
+                                    <Typography
+                                        variant="h6"
+                                        sx={{ fontWeight: 600 }}
+                                    >
                                         {exam.title}
                                     </Typography>
                                     <Typography variant="body2">
@@ -211,9 +322,10 @@ function StudentDashboard() {
                                             sx={{
                                                 color:
                                                     examResult.status === "PASS"
-                                                        ? "green"
-                                                        : "red",
+                                                        ? "success.main"
+                                                        : "error.main",
                                                 mt: 1,
+                                                fontWeight: 600,
                                             }}
                                         >
                                             Score: {examResult.score}/
@@ -223,7 +335,13 @@ function StudentDashboard() {
                                     ) : (
                                         <Button
                                             variant="contained"
-                                            sx={{ mt: 1 }}
+                                            sx={{
+                                                mt: 1.5,
+                                                width: {
+                                                    xs: "100%",
+                                                    sm: "auto",
+                                                },
+                                            }}
                                             onClick={() =>
                                                 handleAttemptExam(exam)
                                             }
@@ -235,7 +353,7 @@ function StudentDashboard() {
                             );
                         })
                     )}
-                </Box>
+                </Paper>
 
                 <Dialog
                     open={openEnrollDialog}
@@ -243,35 +361,50 @@ function StudentDashboard() {
                     fullWidth
                     maxWidth="sm"
                 >
-                    <DialogTitle>Enroll in a Course</DialogTitle>
-                    <DialogContent>
+                    <DialogTitle sx={{ fontWeight: 700 }}>
+                        Enroll in a Course
+                    </DialogTitle>
+                    <DialogContent dividers>
                         {availableCourses.length === 0 ? (
                             <Typography>
                                 No courses available for enrollment.
                             </Typography>
                         ) : (
-                            availableCourses.map((course) => (
-                                <Box
-                                    key={course.id}
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                        mb: 1,
-                                    }}
-                                >
-                                    <Typography>{course.name}</Typography>
-                                    <Button
-                                        variant="contained"
-                                        onClick={() => handleEnroll(course.id)}
+                            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                                {availableCourses.map((course) => (
+                                    <Box
+                                        key={course.id}
+                                        sx={{
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                            alignItems: "center",
+                                            gap: 2,
+                                            border: "1px solid rgba(148,163,184,0.2)",
+                                            borderRadius: 2,
+                                            px: 2,
+                                            py: 1.5,
+                                        }}
                                     >
-                                        Enroll
-                                    </Button>
-                                </Box>
-                            ))
+                                        <Box>
+                                            <Typography sx={{ fontWeight: 600 }}>
+                                                {course.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {course.description || "No description provided"}
+                                            </Typography>
+                                        </Box>
+                                        <Button
+                                            variant="contained"
+                                            onClick={() => handleEnroll(course.id)}
+                                        >
+                                            Enroll
+                                        </Button>
+                                    </Box>
+                                ))}
+                            </Box>
                         )}
                     </DialogContent>
-                    <DialogActions>
+                    <DialogActions sx={{ px: 3, py: 2 }}>
                         <Button onClick={() => setOpenEnrollDialog(false)}>
                             Close
                         </Button>

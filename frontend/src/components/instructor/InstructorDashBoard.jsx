@@ -59,23 +59,28 @@ function InstructorDashboard() {
 
   return (
     <DashboardLayout title="Instructor Dashboard">
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom>
-          Instructor Dashboard
-        </Typography>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Empower your classes
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+            Organize course content, publish exams, and monitor student readiness with streamlined tools.
+          </Typography>
+        </Box>
         {error && (
-          <Typography color="error" sx={{ mb: 2 }}>
+          <Typography color="error">
             {error}
           </Typography>
         )}
-        <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid container spacing={3}>
           <DashboardCard
             title="My Courses"
             description={`${myCourses.length} Courses Assigned`}
             buttonText="View Courses"
             icon={<SubjectIcon />}
             onClick={() => navigate("/instructor/courses")}
-            bgColor="linear-gradient(135deg, #2196F3, #64B5F6)"
+            bgColor="linear-gradient(135deg, #6366F1, #818CF8)"
           />
           <DashboardCard
             title="Create Exam"
@@ -83,13 +88,10 @@ function InstructorDashboard() {
             buttonText="Create Exam"
             icon={<QuizIcon />}
             onClick={() => setOpenAddExam(true)}
-            bgColor="linear-gradient(135deg, #FF9800, #FFB74D)"
+            bgColor="linear-gradient(135deg, #F97316, #FB923C)"
           />
         </Grid>
-        {/* Always display Manage Exams */}
-        <Box sx={{ mt: 4 }}>
-          <ManageExams exams={myExams} refreshExams={loadExams} />
-        </Box>
+        <ManageExams exams={myExams} refreshExams={loadExams} />
         <EnhancedAddExamDialog
           open={openAddExam}
           onClose={() => setOpenAddExam(false)}

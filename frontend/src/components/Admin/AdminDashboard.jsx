@@ -116,12 +116,17 @@ function AdminDashboard() {
 
   return (
     <DashboardLayout title="Admin Dashboard">
-      <Box sx={{ p: 3 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>
-          Welcome, Admin
-        </Typography>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            Welcome back, Admin 👋
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
+            Keep track of instructors, assign courses instantly, and dive into analytics with a refreshed modern layout.
+          </Typography>
+        </Box>
 
-        <Grid container spacing={3} sx={{ mt: 2 }}>
+        <Grid container spacing={3}>
           <DashboardCard
             title="Manage Instructors"
             description={`${instructors.length} Registered Instructors`}
@@ -131,7 +136,7 @@ function AdminDashboard() {
               loadInstructors();
               loadAllCourses();
             }}
-            bgColor="linear-gradient(135deg, #4CAF50, #81C784)"
+            bgColor="linear-gradient(135deg, #6366F1, #818CF8)"
           />
           <DashboardCard
             title="Analytics"
@@ -139,12 +144,22 @@ function AdminDashboard() {
             buttonText="View Analytics"
             icon={<AnalyticsIcon sx={{ fontSize: 40 }} />}
             onClick={() => navigate("/admin/viewAnalytics")}
-            bgColor="linear-gradient(135deg, #FF9800, #FFB74D)"
+            bgColor="linear-gradient(135deg, #14B8A6, #22D3EE)"
           />
         </Grid>
 
-        {/* Search Bar */}
-        <Box sx={{ mt: 4 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, md: 3 },
+            borderRadius: 3,
+            background:
+              "linear-gradient(145deg, rgba(255,255,255,0.96), rgba(255,255,255,0.82))",
+            border: "1px solid rgba(99, 102, 241, 0.12)",
+            backdropFilter: "blur(18px)",
+            boxShadow: "0 18px 36px rgba(15, 23, 42, 0.08)",
+          }}
+        >
           <TextField
             fullWidth
             variant="outlined"
@@ -159,21 +174,57 @@ function AdminDashboard() {
               ),
             }}
           />
-        </Box>
+        </Paper>
 
-        {/* Instructors List */}
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600 }}>
-            Instructors List
-          </Typography>
+        <Paper
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            p: 0,
+            overflow: "hidden",
+            border: "1px solid rgba(15, 23, 42, 0.08)",
+            background: "rgba(255,255,255,0.92)",
+          }}
+        >
+          <Box
+            sx={{
+              px: { xs: 2.5, md: 3.5 },
+              py: { xs: 2.5, md: 3 },
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 1.5,
+              alignItems: { md: "center" },
+              justifyContent: "space-between",
+              borderBottom: "1px solid rgba(15, 23, 42, 0.06)",
+              background: "linear-gradient(120deg, rgba(79,70,229,0.08), rgba(6,182,212,0.08))",
+            }}
+          >
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                Instructors
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Assign instructors to courses and keep roles streamlined.
+              </Typography>
+            </Box>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                loadInstructors();
+                loadAllCourses();
+              }}
+            >
+              Refresh data
+            </Button>
+          </Box>
           {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+            <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
               <CircularProgress />
             </Box>
           ) : (
-            <Paper sx={{ maxHeight: 300, overflow: "auto", p: 2, borderRadius: 2 }}>
+            <Box sx={{ maxHeight: 420, overflow: "auto" }}>
               {filteredInstructors.length > 0 ? (
-                <List disablePadding>
+                <List disablePadding sx={{ py: 1.5 }}>
                   {filteredInstructors.map((instructor) => {
                     // Find the course assigned to this instructor
                     const assignedCourse = allCourses.find(
@@ -184,9 +235,17 @@ function AdminDashboard() {
                     return (
                       <React.Fragment key={instructor.id}>
                         <ListItem
+                          sx={{
+                            px: { xs: 2.5, md: 3 },
+                            py: 1.5,
+                          }}
                           secondaryAction={
                             assignedCourse ? (
-                              <Chip label={assignedCourse.name} color="primary" />
+                              <Chip
+                                label={assignedCourse.name}
+                                color="primary"
+                                sx={{ fontWeight: 600, opacity: 0.85 }}
+                              />
                             ) : (
                               <Button
                                 variant="outlined"
@@ -200,22 +259,23 @@ function AdminDashboard() {
                           <ListItemText
                             primary={`${instructor.firstName} ${instructor.lastName}`}
                             secondary={instructor.email}
-                            primaryTypographyProps={{ fontWeight: 500 }}
+                            primaryTypographyProps={{ fontWeight: 600 }}
+                            secondaryTypographyProps={{ color: "text.secondary" }}
                           />
                         </ListItem>
-                        <Divider component="li" />
+                        <Divider component="li" sx={{ mx: { xs: 2.5, md: 3 } }} />
                       </React.Fragment>
                     );
                   })}
                 </List>
               ) : (
-                <Typography variant="body1" align="center">
+                <Typography variant="body1" align="center" sx={{ py: 4 }}>
                   No instructors found.
                 </Typography>
               )}
-            </Paper>
+            </Box>
           )}
-        </Box>
+        </Paper>
 
         {/* Assign Course Dialog */}
         <Dialog
@@ -224,8 +284,8 @@ function AdminDashboard() {
           fullWidth
           maxWidth="sm"
         >
-          <DialogTitle sx={{ fontWeight: 600 }}>Assign Course</DialogTitle>
-          <DialogContent>
+          <DialogTitle sx={{ fontWeight: 700 }}>Assign Course</DialogTitle>
+          <DialogContent dividers>
             <Typography variant="subtitle1" gutterBottom>
               Assign a course to:{" "}
               {selectedInstructor && `${selectedInstructor.firstName} ${selectedInstructor.lastName}`}
@@ -257,7 +317,7 @@ function AdminDashboard() {
               </Typography>
             )}
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 2 }}>
+          <DialogActions sx={{ px: 3, py: 2.5 }}>
             <Button onClick={() => setAssignDialogOpen(false)} disabled={assignLoading}>
               Cancel
             </Button>

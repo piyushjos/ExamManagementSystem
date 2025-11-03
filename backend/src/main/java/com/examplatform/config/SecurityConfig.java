@@ -40,6 +40,7 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/ai/**").hasAnyRole("INSTRUCTOR", "ADMIN")
                         .requestMatchers("/api/auth/**").permitAll()            // register/login are open
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")      // only ADMIN
                         .requestMatchers("/api/instructor/**").hasAnyRole("INSTRUCTOR", "ADMIN")

@@ -34,12 +34,43 @@ const ManageExams = ({ exams, refreshExams }) => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Manage Exams
-      </Typography>
+    <Paper
+      elevation={0}
+      sx={{
+        borderRadius: 3,
+        border: "1px solid rgba(148, 163, 184, 0.22)",
+        background: "rgba(255,255,255,0.94)",
+        overflow: "hidden",
+      }}
+    >
+      <Box
+        sx={{
+          px: { xs: 2.5, md: 3.5 },
+          py: { xs: 2.5, md: 3 },
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 1.5,
+          alignItems: { md: "center" },
+          justifyContent: "space-between",
+          background:
+            "linear-gradient(120deg, rgba(79,70,229,0.1), rgba(37,99,235,0.08))",
+          borderBottom: "1px solid rgba(148, 163, 184, 0.22)",
+        }}
+      >
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Manage Exams
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Control publication status and preview course alignment.
+          </Typography>
+        </Box>
+        <Typography variant="body2" color="text.secondary">
+          {exams?.length || 0} exam{exams?.length === 1 ? "" : "s"}
+        </Typography>
+      </Box>
       {exams && exams.length > 0 ? (
-        <TableContainer component={Paper}>
+        <TableContainer component={Box}>
           <Table>
             <TableHead>
               <TableRow>
@@ -48,24 +79,40 @@ const ManageExams = ({ exams, refreshExams }) => {
                 <TableCell>Duration (min)</TableCell>
                 <TableCell># of Questions</TableCell>
                 <TableCell>Status</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {exams.map((exam) => (
-                <TableRow key={exam.id}>
-                  <TableCell>{exam.title}</TableCell>
+                <TableRow
+                  key={exam.id}
+                  hover
+                  sx={{
+                    "&:last-of-type td, &:last-of-type th": {
+                      borderBottom: "none",
+                    },
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: 600 }}>{exam.title}</TableCell>
                   <TableCell>{exam.course?.name || "N/A"}</TableCell>
                   <TableCell>{exam.duration}</TableCell>
                   <TableCell>{exam.numberOfQuestions || "All"}</TableCell>
                   <TableCell>
                     {exam.published ? (
-                      <Chip label="Live" color="success" />
+                      <Chip
+                        label="Live"
+                        color="success"
+                        sx={{ fontWeight: 600 }}
+                      />
                     ) : (
-                      <Chip label="Not Live" />
+                      <Chip
+                        label="Not Live"
+                        color="default"
+                        sx={{ fontWeight: 600 }}
+                      />
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell align="right">
                     <Button
                       variant="outlined"
                       size="small"
@@ -99,9 +146,11 @@ const ManageExams = ({ exams, refreshExams }) => {
           </Table>
         </TableContainer>
       ) : (
-        <Typography>No exams found.</Typography>
+        <Box sx={{ py: 5, textAlign: "center" }}>
+          <Typography>No exams found.</Typography>
+        </Box>
       )}
-    </Box>
+    </Paper>
   );
 };
 
