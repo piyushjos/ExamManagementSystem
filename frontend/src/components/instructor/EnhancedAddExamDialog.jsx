@@ -13,13 +13,16 @@ import {
   MenuItem,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   Divider,
   Typography,
   Switch,
   FormControlLabel,
   Box,
+  IconButton,
 } from "@mui/material";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import api from '../../services/api.js'
 
 export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => {
@@ -60,15 +63,24 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
     ];
   };
 
-  // Question form (what user is currently editing)
-  const [questionForm, setQuestionForm] = useState({
+  const getQuestionTypeLabel = (type) => {
+    if (!type) return "Unknown";
+    return type.replace(/_/g, " ");
+  };
+
+  const createEmptyQuestionForm = (type = "MULTIPLE_CHOICE") => ({
     text: "",
-    type: "MULTIPLE_CHOICE",
+    type,
     marks: 5,
     isCodeQuestion: false,
     codeSnippet: "",
-    options: getDefaultOptions("MULTIPLE_CHOICE"),
+    options: getDefaultOptions(type),
   });
+
+  // Question form (what user is currently editing)
+  const [questionForm, setQuestionForm] = useState(createEmptyQuestionForm());
+  const [editingIndex, setEditingIndex] = useState(null);
+  const isEditing = editingIndex !== null;
 
   // 🔵 AI → UI mapper for THIS component shape
   const mapAIToUI = (aiQ) => {
@@ -121,7 +133,14 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
       setAiQuestions(uiQs);
       setAiIndex(0);
       if (uiQs.length > 0) {
-        setQuestionForm(uiQs[0]);
+        const firstQuestion = uiQs[0];
+        setQuestionForm({
+          ...firstQuestion,
+          options: (firstQuestion.options || getDefaultOptions(firstQuestion.type)).map(
+              (opt) => ({ ...opt })
+          ),
+        });
+        setEditingIndex(null);
       }
     } catch (err) {
       console.error(err);
@@ -135,7 +154,14 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
     if (aiIndex + 1 < aiQuestions.length) {
       const next = aiIndex + 1;
       setAiIndex(next);
-      setQuestionForm(aiQuestions[next]);
+      const nextQuestion = aiQuestions[next];
+      setQuestionForm({
+        ...nextQuestion,
+        options: (nextQuestion.options || getDefaultOptions(nextQuestion.type)).map(
+            (opt) => ({ ...opt })
+        ),
+      });
+      setEditingIndex(null);
     } else {
       alert("No more AI questions");
     }
@@ -189,6 +215,47 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
     });
   };
 
+  const resetQuestionForm = (type) => {
+    const targetType = type || questionForm.type || "MULTIPLE_CHOICE";
+    setQuestionForm(createEmptyQuestionForm(targetType));
+  };
+
+  const handleEditQuestion = (index) => {
+    const selected = questions[index];
+    if (!selected) {
+      return;
+    }
+    setEditingIndex(index);
+    setQuestionForm({
+      ...selected,
+      options: (selected.options || getDefaultOptions(selected.type)).map((opt) => ({
+        ...opt,
+      })),
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    resetQuestionForm();
+  };
+
+  const handleDeleteQuestion = (index) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== index));
+    setEditingIndex((prev) => {
+      if (prev === null) {
+        return null;
+      }
+      if (prev === index) {
+        resetQuestionForm();
+        return null;
+      }
+      if (prev > index) {
+        return prev - 1;
+      }
+      return prev;
+    });
+  };
+
   const removeOption = (index) => {
     if (
         questionForm.type === "MULTIPLE_CHOICE" &&
@@ -211,26 +278,48 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
       alert("Please mark one option as correct");
       return;
     }
+    const sanitizedQuestion = {
+      ...questionForm,
+      options: questionForm.options.map((opt) => ({ ...opt })),
+    };
+
+    if (isEditing) {
+      setQuestions((prev) => {
+        const updated = [...prev];
+        if (!updated[editingIndex]) {
+          return prev;
+        }
+        updated[editingIndex] = {
+          ...sanitizedQuestion,
+          id: updated[editingIndex].id,
+        };
+        return updated;
+      });
+      setEditingIndex(null);
+      resetQuestionForm(sanitizedQuestion.type);
+      return;
+    }
+
     setQuestions((prev) => [
       ...prev,
-      { ...questionForm, id: Date.now().toString() },
+      { ...sanitizedQuestion, id: Date.now().toString() },
     ]);
 
     // if AI still has more, auto-load next AI q
     if (aiQuestions.length > 0 && aiIndex + 1 < aiQuestions.length) {
       const next = aiIndex + 1;
       setAiIndex(next);
-      setQuestionForm(aiQuestions[next]);
+      const nextQuestion = aiQuestions[next];
+      setQuestionForm({
+        ...nextQuestion,
+        options: (nextQuestion.options || getDefaultOptions(nextQuestion.type)).map(
+            (opt) => ({ ...opt })
+        ),
+      });
+      setEditingIndex(null);
     } else {
       // normal reset
-      setQuestionForm({
-        text: "",
-        type: questionForm.type,
-        marks: 5,
-        isCodeQuestion: false,
-        codeSnippet: "",
-        options: getDefaultOptions(questionForm.type),
-      });
+      resetQuestionForm(sanitizedQuestion.type);
     }
   };
 
@@ -279,6 +368,8 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
       setQuestions([]);
       setAiQuestions([]);
       setAiIndex(0);
+      setEditingIndex(null);
+      resetQuestionForm("MULTIPLE_CHOICE");
       setStep("exam-details");
       onClose();
     }
@@ -286,6 +377,7 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
 
   const handleBack = () => {
     setStep("exam-details");
+    setEditingIndex(null);
   };
 
   return (
@@ -293,6 +385,8 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
           open={open}
           onClose={() => {
             setStep("exam-details");
+            setEditingIndex(null);
+            resetQuestionForm("MULTIPLE_CHOICE");
             onClose();
           }}
           fullWidth
@@ -424,135 +518,277 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
                   </Box>
                 </Box>
 
-                {questions.length > 0 && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="h6">Questions Preview</Typography>
-                      <List>
-                        {questions.map((q, idx) => (
-                            <React.Fragment key={q.id}>
-                              <ListItem>
-                                <ListItemText
-                                    primary={`${idx + 1}. ${q.text}`}
-                                    secondary={`Type: ${q.type}, Marks: ${q.marks}`}
-                                />
-                              </ListItem>
-                              <Divider />
-                            </React.Fragment>
-                        ))}
-                      </List>
-                    </Box>
-                )}
-
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <TextField
-                        label="Question Text"
-                        name="text"
-                        fullWidth
-                        value={questionForm.text}
-                        onChange={handleQuestionFormChange}
-                        required
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControl fullWidth>
-                      <InputLabel id="question-type-label">Question Type</InputLabel>
-                      <Select
-                          labelId="question-type-label"
-                          name="type"
-                          value={questionForm.type}
-                          onChange={handleTypeChange}
-                      >
-                        <MenuItem value="MULTIPLE_CHOICE">Multiple Choice</MenuItem>
-                        <MenuItem value="TRUE_FALSE">True/False</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <FormControlLabel
-                        control={
-                          <Switch
-                              checked={questionForm.isCodeQuestion}
-                              onChange={(e) =>
-                                  setQuestionForm((prev) => ({
-                                    ...prev,
-                                    isCodeQuestion: e.target.checked,
-                                  }))
-                              }
-                          />
-                        }
-                        label="Include Code Snippet"
-                    />
-                  </Grid>
-                  {questionForm.isCodeQuestion && (
+                <Grid container spacing={2} sx={{ alignItems: { xs: "stretch", md: "flex-start" } }}>
+                  <Grid item xs={12} md={7} sx={{ display: "flex" }}>
+                    <Grid container spacing={2} sx={{ flexGrow: 1 }}>
                       <Grid item xs={12}>
                         <TextField
-                            label="Code Snippet"
-                            name="codeSnippet"
-                            fullWidth
+                            label="Question Text"
+                            name="text"
                             multiline
-                            rows={4}
-                            value={questionForm.codeSnippet}
+                            minRows={3}
+                            maxRows={6}
+                            fullWidth
+                            value={questionForm.text}
                             onChange={handleQuestionFormChange}
+                            required
+                            sx={{
+                              "& .MuiInputBase-root": {
+                                alignItems: "flex-start",
+                              },
+                              "& textarea": {
+                                resize: "vertical",
+                              },
+                            }}
                         />
                       </Grid>
-                  )}
-
-                  {/* options */}
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle1">
-                      Options (Select one correct option)
-                    </Typography>
-                  </Grid>
-                  {questionForm.options.map((option, index) => (
-                      <Grid container item xs={12} spacing={1} key={index}>
-                        <Grid item xs={8}>
-                          <TextField
-                              label={`Option ${index + 1}`}
-                              fullWidth
-                              value={option.optionText}
-                              onChange={(e) =>
-                                  handleOptionChange(index, "optionText", e.target.value)
-                              }
-                          />
-                        </Grid>
-                        <Grid item xs={2}>
-                          <FormControlLabel
-                              control={
-                                <Switch
-                                    checked={option.isCorrect}
-                                    onChange={() => toggleCorrectOption(index)}
-                                />
-                              }
-                              label="Correct"
-                          />
-                        </Grid>
-                        <Grid item xs={2}>
-                          {questionForm.type === "MULTIPLE_CHOICE" &&
-                              questionForm.options.length > 4 && (
-                                  <Button
-                                      variant="outlined"
-                                      onClick={() => removeOption(index)}
-                                  >
-                                    Remove
-                                  </Button>
-                              )}
-                        </Grid>
-                      </Grid>
-                  ))}
-
-                  {questionForm.type === "MULTIPLE_CHOICE" && (
                       <Grid item xs={12}>
-                        <Button variant="outlined" onClick={addOption}>
-                          Add Option
-                        </Button>
+                        <FormControl fullWidth>
+                          <InputLabel id="question-type-label">Question Type</InputLabel>
+                          <Select
+                              labelId="question-type-label"
+                              name="type"
+                              value={questionForm.type}
+                              onChange={handleTypeChange}
+                          >
+                            <MenuItem value="MULTIPLE_CHOICE">Multiple Choice</MenuItem>
+                            <MenuItem value="TRUE_FALSE">True/False</MenuItem>
+                          </Select>
+                        </FormControl>
                       </Grid>
-                  )}
+                      <Grid item xs={12}>
+                        <FormControlLabel
+                            control={
+                              <Switch
+                                  checked={questionForm.isCodeQuestion}
+                                  onChange={(e) =>
+                                      setQuestionForm((prev) => ({
+                                        ...prev,
+                                        isCodeQuestion: e.target.checked,
+                                      }))
+                                  }
+                              />
+                            }
+                            label="Include Code Snippet"
+                        />
+                      </Grid>
+                      {questionForm.isCodeQuestion && (
+                          <Grid item xs={12}>
+                            <TextField
+                                label="Code Snippet"
+                                name="codeSnippet"
+                                fullWidth
+                                multiline
+                                rows={4}
+                                value={questionForm.codeSnippet}
+                                onChange={handleQuestionFormChange}
+                            />
+                          </Grid>
+                      )}
 
-                  <Grid item xs={12}>
-                    <Button variant="contained" onClick={addQuestion}>
-                      Add Question
-                    </Button>
+                      {/* options */}
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle1">
+                          Options (Select one correct option)
+                        </Typography>
+                      </Grid>
+                      {questionForm.options.map((option, index) => (
+                          <Grid container item xs={12} spacing={1} key={index}>
+                            <Grid item xs={8}>
+                              <TextField
+                                  label={`Option ${index + 1}`}
+                                  fullWidth
+                                  value={option.optionText}
+                                  onChange={(e) =>
+                                      handleOptionChange(index, "optionText", e.target.value)
+                                  }
+                              />
+                            </Grid>
+                            <Grid item xs={2}>
+                              <FormControlLabel
+                                  control={
+                                    <Switch
+                                        checked={option.isCorrect}
+                                        onChange={() => toggleCorrectOption(index)}
+                                    />
+                                  }
+                                  label="Correct"
+                              />
+                            </Grid>
+                            <Grid item xs={2}>
+                              {questionForm.type === "MULTIPLE_CHOICE" &&
+                                  questionForm.options.length > 4 && (
+                                      <Button
+                                          variant="outlined"
+                                          onClick={() => removeOption(index)}
+                                      >
+                                        Remove
+                                      </Button>
+                                  )}
+                            </Grid>
+                          </Grid>
+                      ))}
+
+                      {questionForm.type === "MULTIPLE_CHOICE" && (
+                          <Grid item xs={12}>
+                            <Button variant="outlined" onClick={addOption}>
+                              Add Option
+                            </Button>
+                          </Grid>
+                      )}
+
+                      <Grid item xs={12}>
+                        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                          <Button variant="contained" onClick={addQuestion}>
+                            {isEditing ? "Update Question" : "Add Question"}
+                          </Button>
+                          {isEditing && (
+                              <Button variant="text" onClick={handleCancelEdit}>
+                                Cancel Edit
+                              </Button>
+                          )}
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                  <Grid
+                      item
+                      xs={12}
+                      md={5}
+                      sx={{
+                        display: "flex",
+                        maxHeight: { xs: 460, md: "calc(100vh - 320px)" },
+                        minHeight: 0,
+                      }}
+                  >
+                    <Box
+                        sx={{
+                          border: "1px solid #e0e0e0",
+                          borderRadius: 1,
+                          p: 2,
+                          bgcolor: "#fafafa",
+                          boxShadow: 1,
+                          minHeight: { xs: 280, md: 320 },
+                          maxHeight: "100%",
+                          flexGrow: 1,
+                          display: "flex",
+                          flexDirection: "column",
+                          overflow: "hidden",
+                          minHeight: 0,
+                        }}
+                    >
+                      <Typography variant="h6" sx={{ mb: 1 }}>
+                        Added Questions
+                      </Typography>
+                      {questions.length === 0 ? (
+                          <Typography variant="body2" color="text.secondary">
+                            No questions added yet.
+                          </Typography>
+                      ) : (
+                          <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                              Click a question to review or edit.
+                            </Typography>
+                            <List
+                                dense
+                                sx={{
+                                  flexGrow: 1,
+                                  overflowY: "auto",
+                                  pr: 1,
+                                  pt: 0,
+                                  pb: 0,
+                                  minHeight: 0,
+                                  scrollbarWidth: "thin",
+                                }}
+                            >
+                              {questions.map((q, idx) => (
+                                  <React.Fragment key={q.id}>
+                                    <ListItem disablePadding sx={{ alignItems: "flex-start" }}>
+                                      <Box
+                                          sx={{
+                                            display: "flex",
+                                            alignItems: "flex-start",
+                                            gap: 0.5,
+                                            width: "100%",
+                                          }}
+                                      >
+                                        <ListItemButton
+                                            onClick={() => handleEditQuestion(idx)}
+                                            selected={editingIndex === idx}
+                                            sx={{
+                                              flex: 1,
+                                              alignItems: "flex-start",
+                                              flexDirection: "column",
+                                              gap: 0.5,
+                                              "&.Mui-selected": {
+                                                bgcolor: "action.selected",
+                                                "&:hover": { bgcolor: "action.selected" },
+                                              },
+                                            }}
+                                        >
+                                          <ListItemText
+                                              primary={`${idx + 1}. ${q.text}`}
+                                              primaryTypographyProps={{
+                                                fontWeight: 600,
+                                                color: "text.primary",
+                                              }}
+                                              secondary={
+                                                <Box component="span" sx={{ display: "block", mt: 0.5 }}>
+                                                  <Typography variant="caption" color="text.secondary">
+                                                    {`Type: ${getQuestionTypeLabel(q.type)} • Marks: ${q.marks ?? "N/A"}`}
+                                                  </Typography>
+                                                  {Array.isArray(q.options) && q.options.length > 0 && (
+                                                      <Box
+                                                          component="ul"
+                                                          sx={{
+                                                            pl: 2,
+                                                            mt: 0.5,
+                                                            mb: 0,
+                                                            typography: "body2",
+                                                          }}
+                                                      >
+                                                        {q.options.map((opt, optionIdx) => (
+                                                            <Box
+                                                                component="li"
+                                                                key={optionIdx}
+                                                                sx={{
+                                                                  color: opt.isCorrect ? "success.main" : "text.primary",
+                                                                  fontWeight: opt.isCorrect ? 600 : 400,
+                                                                  listStyleType: "disc",
+                                                                }}
+                                                            >
+                                                              {(opt.optionText || `Option ${optionIdx + 1}`).trim()}
+                                                              {opt.isCorrect ? " (Correct)" : ""}
+                                                            </Box>
+                                                        ))}
+                                                      </Box>
+                                                  )}
+                                                </Box>
+                                              }
+                                          />
+                                        </ListItemButton>
+                                        <IconButton
+                                            edge="end"
+                                            color="error"
+                                            size="small"
+                                            aria-label={`Delete question ${idx + 1}`}
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              handleDeleteQuestion(idx);
+                                            }}
+                                            sx={{ mt: 0.5 }}
+                                        >
+                                          <DeleteOutlineIcon fontSize="small" />
+                                        </IconButton>
+                                      </Box>
+                                    </ListItem>
+                                    <Divider component="li" />
+                                  </React.Fragment>
+                              ))}
+                            </List>
+                          </Box>
+                      )}
+                    </Box>
                   </Grid>
                 </Grid>
               </DialogContent>

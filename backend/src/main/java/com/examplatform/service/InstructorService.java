@@ -1,5 +1,6 @@
 package com.examplatform.service;
 
+import com.examplatform.dto.ExamWithQuestionsDTO;
 import com.examplatform.model.Course;
 import com.examplatform.model.Exam;
 import com.examplatform.model.ExamResult;
@@ -22,5 +23,7 @@ public interface InstructorService {
     // New: List all exams for current instructor.
     List<Exam> getAllExamsForInstructor();
     Exam unpublishExam(Long examId);
+    Exam updateExamWithQuestions(Long examId, ExamWithQuestionsDTO dto);
+
 
 }

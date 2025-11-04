@@ -7,6 +7,8 @@ import com.examplatform.model.User;
 import com.examplatform.service.InstructorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import com.examplatform.dto.ExamWithQuestionsDTO;
+
 
 import java.util.List;
 
@@ -71,4 +73,10 @@ public class InstructorController {
     public List<User> getEnrolledStudents(@PathVariable Long courseId) {
         return instructorService.getEnrolledStudents(courseId);
     }
+    @PutMapping("/exams/{examId}/full")
+    public Exam updateExamWithQuestions(@PathVariable Long examId,
+                                        @RequestBody ExamWithQuestionsDTO dto) {
+        return instructorService.updateExamWithQuestions(examId, dto);
+    }
+
 }

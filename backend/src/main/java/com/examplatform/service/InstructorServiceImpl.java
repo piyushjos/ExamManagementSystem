@@ -1,10 +1,7 @@
 package com.examplatform.service;
 
 import com.examplatform.exception.ResourceNotFoundException;
-import com.examplatform.model.Course;
-import com.examplatform.model.Exam;
-import com.examplatform.model.ExamResult;
-import com.examplatform.model.User;
+import com.examplatform.model.*;
 import com.examplatform.repository.CourseRepository;
 import com.examplatform.repository.ExamRepository;
 import com.examplatform.repository.ExamResultRepository;
@@ -15,6 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import com.examplatform.dto.ExamWithQuestionsDTO;
+import com.examplatform.dto.QuestionItemDTO;
+import com.examplatform.model.Question;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -256,4 +259,83 @@ public class InstructorServiceImpl implements InstructorService {
         log.debug("getAllExamsForInstructor: total exams={}", allExams.size());
         return allExams;
     }
+
+
+    @Override
+    public Exam updateExamWithQuestions(Long examId, ExamWithQuestionsDTO dto) {
+        User currentInstructor = getCurrentInstructor();
+        log.debug("updateExamWithQuestions: instructorId={} examId={}",
+                currentInstructor.getId(), examId);
+
+        // 1️⃣ Find exam
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> {
+                    log.debug("updateExamWithQuestions: exam not found examId={}", examId);
+                    return new ResourceNotFoundException("Exam not found with id: " + examId);
+                });
+
+        // 2️⃣ Check instructor owns this course
+        Course course = exam.getCourse();
+        if (course.getInstructors() == null || !course.getInstructors().contains(currentInstructor)) {
+            log.debug("updateExamWithQuestions: not authorized instructorId={} courseId={}",
+                    currentInstructor.getId(), course.getId());
+            throw new RuntimeException("You are not authorized to update this exam");
+        }
+
+        // 3️⃣ Update exam fields (only if not null)
+        if (dto.getTitle() != null) exam.setTitle(dto.getTitle());
+        if (dto.getDuration() != null) exam.setDuration(dto.getDuration());
+        if (dto.getTotalScore() != null) exam.setTotalScore(dto.getTotalScore());
+        if (dto.getNumberOfQuestions() != null) exam.setNumberOfQuestions(dto.getNumberOfQuestions());
+        if (dto.getMaxAttempts() != null) exam.setMaxAttempts(dto.getMaxAttempts());
+        if (dto.getPublished() != null) exam.setPublished(dto.getPublished());
+
+        // 4️⃣ Map existing questions by id
+        Map<Long, Question> existingById = new HashMap<>();
+        if (exam.getQuestions() != null) {
+            for (Question q : exam.getQuestions()) {
+                existingById.put(q.getId(), q);
+            }
+        }
+
+        // 5️⃣ Process questions from DTO
+        if (dto.getQuestions() != null) {
+            for (QuestionItemDTO qdto : dto.getQuestions()) {
+                if (qdto.getId() == null) {
+                    // ➕ New question
+                    Question newQ = new Question();
+                    newQ.setText(qdto.getQuestionText());
+                    if (qdto.getMarks() != null) newQ.setMarks(qdto.getMarks());
+                    newQ.setCorrectAnswer(qdto.getCorrectAnswer());
+                    newQ.setOptions(qdto.getOptions());
+                    newQ.setExam(exam);                  // link to this exam
+                    exam.getQuestions().add(newQ);
+                    log.debug("updateExamWithQuestions: added new question text='{}'", qdto.getQuestionText());
+                } else {
+                    // 🔁 Update existing question
+                    Question existing = existingById.get(qdto.getId());
+                    if (existing == null) {
+                        log.debug("updateExamWithQuestions: question not found id={}", qdto.getId());
+                        throw new ResourceNotFoundException("Question not found with id: " + qdto.getId());
+                    }
+                    if (qdto.getQuestionText() != null) existing.setText(qdto.getQuestionText());
+                    if (qdto.getMarks() != null) existing.setMarks(qdto.getMarks());
+                    if (qdto.getCorrectAnswer() != null) existing.setCorrectAnswer(qdto.getCorrectAnswer());
+                    if (qdto.getOptions() != null) existing.setOptions(qdto.getOptions());
+                    log.debug("updateExamWithQuestions: updated questionId={}", existing.getId());
+                }
+            }
+        }
+
+        // ❗ we are NOT removing questions that are missing from the list (keep it simple for now)
+
+        // 6️⃣ Save exam (cascade updates + inserts questions)
+        Exam saved = examRepository.save(exam);
+        log.debug("updateExamWithQuestions: saved examId={} questionsCount={}",
+                saved.getId(),
+                (saved.getQuestions() != null ? saved.getQuestions().size() : 0));
+
+        return saved;
+    }
+
 }
