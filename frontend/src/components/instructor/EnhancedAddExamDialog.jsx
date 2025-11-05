@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -25,14 +25,26 @@ import {
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import api from '../../services/api.js'
 
-export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => {
-  // Exam details
-  const [examData, setExamData] = useState({
+export const EnhancedAddExamDialog = ({
+  open,
+  onClose,
+  onAddExam,
+  courses,
+  mode = "create",
+  initialExam = null,
+  onUpdateExam,
+}) => {
+  const isEditMode = mode === "edit";
+
+  const getDefaultExamData = () => ({
     title: "",
     courseId: "",
     duration: 60,
     totalScore: "",
   });
+
+  // Exam details
+  const [examData, setExamData] = useState(getDefaultExamData);
 
   // Saved questions
   const [questions, setQuestions] = useState([]);
@@ -81,6 +93,102 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
   const [questionForm, setQuestionForm] = useState(createEmptyQuestionForm());
   const [editingIndex, setEditingIndex] = useState(null);
   const isEditing = editingIndex !== null;
+
+  const resetDialogState = (type = "MULTIPLE_CHOICE") => {
+    setExamData(getDefaultExamData());
+    setQuestions([]);
+    setEditingIndex(null);
+    setQuestionForm(createEmptyQuestionForm(type));
+    setStep("exam-details");
+    setAiTopic("");
+    setAiNumQuestions(5);
+    setAiMarks(5);
+    setAiQuestions([]);
+    setAiIndex(0);
+  };
+
+  const mapExistingQuestionToUI = (existing) => {
+    const optionSource = Array.isArray(existing?.options) ? existing.options : [];
+    const normalizedOptions =
+      optionSource.length > 0
+        ? optionSource.map((opt) => ({
+            optionText: opt?.optionText ?? opt?.text ?? "",
+            isCorrect:
+              typeof opt?.isCorrect === "boolean"
+                ? opt.isCorrect
+                : Boolean(opt?.correct),
+          }))
+        : getDefaultOptions(existing?.type || "MULTIPLE_CHOICE");
+
+    if (!normalizedOptions.some((opt) => opt.isCorrect) && normalizedOptions.length > 0) {
+      normalizedOptions[0].isCorrect = true;
+    }
+
+    return {
+      id: existing?.id ?? null,
+      text: existing?.text ?? existing?.questionText ?? "",
+      type: existing?.type || "MULTIPLE_CHOICE",
+      marks: existing?.marks ?? 5,
+      isCodeQuestion: existing?.isCodeQuestion ?? false,
+      codeSnippet: existing?.codeSnippet ?? "",
+      options: normalizedOptions.map((opt) => ({ ...opt })),
+    };
+  };
+
+  const handleDialogClose = () => {
+    resetDialogState();
+    onClose();
+  };
+
+  const dialogTitlePrefix = isEditMode ? "Edit Exam" : "Create New Exam";
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    if (isEditMode) {
+      if (!initialExam) {
+        return;
+      }
+
+      const courseSource = initialExam.courseId ?? initialExam.course?.id;
+      const courseIdValue = courseSource ? String(courseSource) : "";
+
+      setExamData({
+        title: initialExam.title || "",
+        courseId: courseIdValue,
+        duration: initialExam.duration ?? 60,
+        totalScore: initialExam.totalScore ?? "",
+      });
+
+      const normalizedQuestions = (initialExam.questions || []).map((question) =>
+        mapExistingQuestionToUI(question)
+      );
+
+      setQuestions(normalizedQuestions);
+      setStep("exam-details");
+      setAiTopic("");
+      setAiNumQuestions(5);
+      setAiMarks(5);
+      setAiQuestions([]);
+      setAiIndex(0);
+
+      if (normalizedQuestions.length > 0) {
+        const firstQuestion = normalizedQuestions[0];
+        setEditingIndex(0);
+        setQuestionForm({
+          ...firstQuestion,
+          options: (firstQuestion.options || []).map((opt) => ({ ...opt })),
+        });
+      } else {
+        setEditingIndex(null);
+        setQuestionForm(createEmptyQuestionForm());
+      }
+    } else {
+      resetDialogState();
+    }
+  }, [open, isEditMode, initialExam]);
 
   // 🔵 AI → UI mapper for THIS component shape
   const mapAIToUI = (aiQ) => {
@@ -339,39 +447,86 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
   const handleSaveAll = async () => {
     const durationNum = Number(examData.duration);
     const totalScoreNum = Number(examData.totalScore);
-    const courseIdNum = Number(examData.courseId);
-    if (isNaN(durationNum) || isNaN(totalScoreNum) || isNaN(courseIdNum)) {
-      alert("Please enter valid numbers for duration, total score, and select a course");
+    const courseIdNum = examData.courseId ? Number(examData.courseId) : Number.NaN;
+
+    if (Number.isNaN(durationNum) || Number.isNaN(totalScoreNum)) {
+      alert("Please enter valid numbers for duration and total score");
       return;
     }
-    const transformedQuestions = questions.map((q) => {
+
+    if (!isEditMode && (Number.isNaN(courseIdNum) || courseIdNum <= 0)) {
+      alert("Please select a course for the exam");
+      return;
+    }
+
+    const baseQuestionData = questions.map((q) => {
       const correctOption = q.options.find((opt) => opt.isCorrect);
       return {
-        text: q.text,
-        marks: q.marks,
-        options: q.options,
+        question: q,
         correctAnswer: correctOption ? correctOption.optionText : "",
-        isCodeQuestion: q.isCodeQuestion,
-        codeSnippet: q.codeSnippet,
       };
     });
-    const payload = {
-      ...examData,
-      courseId: courseIdNum,
-      duration: durationNum,
-      totalScore: totalScoreNum,
-      questions: transformedQuestions,
-    };
-    const examId = await onAddExam(payload);
-    if (examId) {
-      setExamData({ title: "", courseId: "", duration: 60, totalScore: "" });
-      setQuestions([]);
-      setAiQuestions([]);
-      setAiIndex(0);
-      setEditingIndex(null);
-      resetQuestionForm("MULTIPLE_CHOICE");
-      setStep("exam-details");
-      onClose();
+
+    const createQuestionPayload = baseQuestionData.map(({ question, correctAnswer }) => ({
+      text: question.text,
+      marks: question.marks,
+      options: question.options,
+      correctAnswer,
+      isCodeQuestion: question.isCodeQuestion,
+      codeSnippet: question.codeSnippet,
+    }));
+
+    const updateQuestionPayload = baseQuestionData.map(({ question, correctAnswer }) => {
+      const item = {
+        questionText: question.text,
+        marks: question.marks,
+        options: question.options,
+        correctAnswer,
+      };
+      if (typeof question.id === "number") {
+        item.id = question.id;
+      }
+      return item;
+    });
+
+    try {
+      if (isEditMode) {
+        if (!onUpdateExam || !initialExam?.id) {
+          console.error("Edit mode triggered without update handler or exam id");
+          alert("Unable to update this exam right now. Please try again.");
+          return;
+        }
+
+        const updatePayload = {
+          title: examData.title,
+          duration: durationNum,
+          totalScore: totalScoreNum,
+          numberOfQuestions: questions.length,
+          questions: updateQuestionPayload,
+        };
+
+        const updatedExam = await onUpdateExam(initialExam.id, updatePayload);
+        if (updatedExam) {
+          handleDialogClose();
+        }
+        return;
+      }
+
+      const payload = {
+        title: examData.title,
+        courseId: courseIdNum,
+        duration: durationNum,
+        totalScore: totalScoreNum,
+        questions: createQuestionPayload,
+      };
+
+      const examId = await onAddExam(payload);
+      if (examId) {
+        handleDialogClose();
+      }
+    } catch (err) {
+      console.error("Failed to save exam", err);
+      alert(isEditMode ? "Failed to update exam. Please try again." : "Failed to create exam. Please try again.");
     }
   };
 
@@ -383,18 +538,13 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
   return (
       <Dialog
           open={open}
-          onClose={() => {
-            setStep("exam-details");
-            setEditingIndex(null);
-            resetQuestionForm("MULTIPLE_CHOICE");
-            onClose();
-          }}
+          onClose={handleDialogClose}
           fullWidth
           maxWidth="md"
       >
         {step === "exam-details" ? (
             <>
-              <DialogTitle>Create New Exam - Exam Details</DialogTitle>
+              <DialogTitle>{`${dialogTitlePrefix} - Exam Details`}</DialogTitle>
               <DialogContent>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
@@ -416,6 +566,7 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
                           value={examData.courseId}
                           onChange={handleExamDataChange}
                           label="Select Course"
+                          disabled={isEditMode}
                       >
                         {courses && courses.length > 0 ? (
                             courses.map((course) => (
@@ -457,12 +608,7 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
                 </Grid>
               </DialogContent>
               <DialogActions>
-                <Button
-                    onClick={() => {
-                      setStep("exam-details");
-                      onClose();
-                    }}
-                >
+                <Button onClick={handleDialogClose}>
                   Cancel
                 </Button>
                 <Button variant="contained" onClick={handleNextStep}>
@@ -472,7 +618,7 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
             </>
         ) : (
             <>
-              <DialogTitle>Create New Exam - Add Questions</DialogTitle>
+              <DialogTitle>{`${dialogTitlePrefix} - Add Questions`}</DialogTitle>
               <DialogContent>
                 {/* 🔵 AI BOX */}
                 <Box
@@ -674,7 +820,6 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
                           display: "flex",
                           flexDirection: "column",
                           overflow: "hidden",
-                          minHeight: 0,
                         }}
                     >
                       <Typography variant="h6" sx={{ mb: 1 }}>
@@ -795,7 +940,7 @@ export const EnhancedAddExamDialog = ({ open, onClose, onAddExam, courses }) => 
               <DialogActions>
                 <Button onClick={handleBack}>Back</Button>
                 <Button onClick={handleSaveAll} variant="contained">
-                  Save All Questions
+                  {isEditMode ? "Update Exam" : "Save All Questions"}
                 </Button>
               </DialogActions>
             </>

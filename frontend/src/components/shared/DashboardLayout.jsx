@@ -72,7 +72,7 @@ export default function DashboardLayout({ children, title }) {
           <Box>
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, fontStyle: "italic", letterSpacing: "-0.01em" }}
+              sx={{ fontWeight: 700,  letterSpacing: "-0.01em" }}
             >
               {title || "Dashboard"}
             </Typography>

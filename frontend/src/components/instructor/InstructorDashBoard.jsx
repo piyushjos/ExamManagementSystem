@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box, Typography, Grid } from "@mui/material";
 import DashboardLayout from "../shared/DashboardLayout";
 import DashboardCard from "../shared/DashboardCard";
@@ -7,14 +7,46 @@ import SubjectIcon from "@mui/icons-material/Subject";
 import api from "../../services/api";
 import { EnhancedAddExamDialog } from "../instructor/EnhancedAddExamDialog";
 import ManageExams from "../instructor/ManageExams";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 function InstructorDashboard() {
   const [myCourses, setMyCourses] = useState([]);
   const [myExams, setMyExams] = useState([]);
-  const [openAddExam, setOpenAddExam] = useState(false);
+  const [examDialog, setExamDialog] = useState({
+    open: false,
+    mode: "create",
+    exam: null,
+  });
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const { examId: routeExamId } = useParams();
+  const examFromRouteState = location.state?.exam;
+  const skipRouteSyncRef = useRef(false);
+
+  const openCreateDialog = () => {
+    skipRouteSyncRef.current = true;
+    if (location.pathname !== "/instructor") {
+      navigate("/instructor", { replace: true });
+    }
+    setExamDialog({ open: true, mode: "create", exam: null });
+  };
+
+  const handleDialogClose = () => {
+    skipRouteSyncRef.current = true;
+    setExamDialog({ open: false, mode: "create", exam: null });
+    if (routeExamId) {
+      navigate("/instructor", { replace: true });
+    }
+  };
+
+  const handleEditExam = (exam) => {
+    if (!exam) {
+      return;
+    }
+    navigate(`/instructor/exams/${exam.id}/edit`, { state: { exam } });
+    setExamDialog({ open: true, mode: "edit", exam });
+  };
 
   // Load instructor's courses
   const loadCourses = async () => {
@@ -45,15 +77,62 @@ function InstructorDashboard() {
     loadExams();
   }, []);
 
+  useEffect(() => {
+    if (!routeExamId) {
+      if (skipRouteSyncRef.current) {
+        skipRouteSyncRef.current = false;
+      }
+      setExamDialog((prev) => {
+        if (!prev.open || prev.mode !== "edit") {
+          return prev;
+        }
+        return { open: false, mode: "create", exam: null };
+      });
+      return;
+    }
+
+    if (skipRouteSyncRef.current) {
+      return;
+    }
+
+    const matchedExam =
+      examFromRouteState ||
+      myExams.find((exam) => String(exam.id) === String(routeExamId));
+
+    if (!matchedExam) {
+      return;
+    }
+
+    setExamDialog((prev) => {
+      if (prev.open && prev.mode === "edit" && prev.exam?.id === matchedExam.id) {
+        return prev;
+      }
+      return { open: true, mode: "edit", exam: matchedExam };
+    });
+  }, [routeExamId, examFromRouteState, myExams]);
+
   // When an exam is added, reload the exams list.
   const handleAddExam = async (examData) => {
     try {
       const newExam = await api.instructor.createExam(examData);
       await loadExams(); // Refresh exams list after creation.
+      setError("");
       return newExam.id;
     } catch (error) {
       console.error("Failed to create exam:", error);
       setError("Failed to create exam");
+    }
+  };
+
+  const handleUpdateExam = async (examId, examData) => {
+    try {
+      const updatedExam = await api.instructor.updateExamWithQuestions(examId, examData);
+      await loadExams();
+      setError("");
+      return updatedExam;
+    } catch (error) {
+      console.error("Failed to update exam:", error);
+      setError("Failed to update exam");
     }
   };
 
@@ -87,16 +166,19 @@ function InstructorDashboard() {
             description="Create a new exam for one of your courses"
             buttonText="Create Exam"
             icon={<QuizIcon />}
-            onClick={() => setOpenAddExam(true)}
+            onClick={openCreateDialog}
             bgColor="linear-gradient(135deg, #F97316, #FB923C)"
           />
         </Grid>
-        <ManageExams exams={myExams} refreshExams={loadExams} />
+        <ManageExams exams={myExams} refreshExams={loadExams} onEditExam={handleEditExam} />
         <EnhancedAddExamDialog
-          open={openAddExam}
-          onClose={() => setOpenAddExam(false)}
+          open={examDialog.open}
+          onClose={handleDialogClose}
           onAddExam={handleAddExam}
+          onUpdateExam={handleUpdateExam}
           courses={myCourses}
+          mode={examDialog.mode}
+          initialExam={examDialog.exam}
         />
       </Box>
     </DashboardLayout>

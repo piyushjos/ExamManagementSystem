@@ -106,7 +106,7 @@ const api = {
     },
     getAnalytics: async () => {
       try {
-        const response = await axiosInstance.get('/api/gpa');
+        const response = await axiosInstance.get('/api/admin/gpa');
         return response.data;
       } catch (error) {
         handleApiError(error);
@@ -152,6 +152,14 @@ const api = {
     updateExam: async (examId, examData) => {
       try {
         const response = await axiosInstance.put(`/api/instructor/exams/${examId}`, examData);
+        return response.data;
+      } catch (error) {
+        handleApiError(error);
+      }
+    },
+    updateExamWithQuestions: async (examId, examData) => {
+      try {
+        const response = await axiosInstance.put(`/api/instructor/exams/${examId}/full`, examData);
         return response.data;
       } catch (error) {
         handleApiError(error);

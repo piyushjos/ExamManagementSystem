@@ -44,6 +44,14 @@ function App() {
                 }
             />
           <Route
+            path="/instructor/exams/:examId/edit"
+            element={
+              <ProtectedRoute allowedRole="INSTRUCTOR">
+                <InstructorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/instructor/*"
             element={
               <ProtectedRoute allowedRole="INSTRUCTOR">

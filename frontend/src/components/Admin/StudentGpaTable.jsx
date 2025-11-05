@@ -14,6 +14,8 @@ import {
     TablePagination,
     Paper,
     Box,
+    Button,
+    Alert,
 } from "@mui/material";
 // import { Search } from "lucide-react";
 import api from "../../services/api.js";
@@ -24,18 +26,22 @@ export default function StudentGpaTable({
     const [query, setQuery] = useState("");          // search query
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(5);
-    const [rows,setRow] = useState([])
+    const [rows, setRow] = useState([])
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const loadStudentData = async () => {
         try {
-            const Gpa = await api.admin.getAnalytics();
-            console.log("my gpa====>",Gpa)
-            setRow(Gpa)
+            setLoading(true);
+            setError("");
+            const gpa = await api.admin.getAnalytics();
+            console.log("my gpa====>", gpa)
+            setRow(Array.isArray(gpa) ? gpa : []);
         } catch (err) {
             console.error("Failed to load student data:", err);
-
+            setError(err.message || "Failed to load analytics");
         } finally {
-
+            setLoading(false);
         }
     };
 
@@ -76,8 +82,22 @@ export default function StudentGpaTable({
             <CardHeader
                 title={title}
                 subheader={`${rows.length} total record${rows.length === 1 ? "" : "s"}`}
+                action={
+                    <Button
+                        variant="contained"
+                        onClick={loadStudentData}
+                        disabled={loading}
+                    >
+                        {loading ? "Loading..." : "Get Analytics"}
+                    </Button>
+                }
             />
             <CardContent>
+                {error && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                        {error}
+                    </Alert>
+                )}
                 <TextField
                     fullWidth
                     placeholder="Search by student or course..."
@@ -104,6 +124,13 @@ export default function StudentGpaTable({
                             </TableRow>
                         </TableHead>
                         <TableBody>
+                            {loading && (
+                                <TableRow>
+                                    <TableCell colSpan={4} align="center">
+                                        Loading analytics...
+                                    </TableCell>
+                                </TableRow>
+                            )}
                             {pageRows.map((row) => (
                                 <TableRow
                                     key={`${row.studentId}-${row.courseId}`}

@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import api from "../../services/api";
 
-const ManageExams = ({ exams, refreshExams }) => {
+const ManageExams = ({ exams, refreshExams, onEditExam }) => {
   const handlePublish = async (examId) => {
     try {
       await api.instructor.publishExam(examId);
@@ -116,7 +116,8 @@ const ManageExams = ({ exams, refreshExams }) => {
                     <Button
                       variant="outlined"
                       size="small"
-                      onClick={() => console.log("Edit exam:", exam.id)}
+                      onClick={() => onEditExam && onEditExam(exam)}
+                      disabled={!onEditExam}
                     >
                       Edit
                     </Button>
