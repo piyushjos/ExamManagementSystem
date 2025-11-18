@@ -95,11 +95,11 @@ ExamPilot is a role-based web app where Admins manage users and courses, Instruc
 ![ER Diagram](Er.png)
 
 
-## Aws Deployment Architecture
+## AWS Deployment Architecture
 ![image5](docs/images/image5.png)
 
 
-## Backend Setup
+## Backend SetupS
 
 ### Clone
 
