@@ -25,7 +25,9 @@
 
 
 # ExamPilot
-ExamPilot is a role-based web app where Admins manage users and courses, Instructors create questions and publish or unpublish exams, and Students enroll and take exams. Students can view their results and overall GPA after submissions. The app provides clear flows for registration, course enrollment, taking exams, and viewing scores.
+React + Spring Boot + MySQL + AWS (EC2, S3, RDS, ALB)
+
+ExamPilot is a production-grade, role-based exam management platform designed for universities, bootcamps, and online training systems. It provides a complete lifecycle for course creation, exam publishing, and student evaluation — built with scalable AWS infrastructure and enhanced with AI-powered question generation using Google's Gemini API.ExamPilot is a role-based web app where Admins manage users and courses, Instructors create questions and publish or unpublish exams, and Students enroll and take exams. Students can view their results and overall GPA after submissions. The app provides clear flows for registration, course enrollment, taking exams, and viewing scores.
 # Main Features
 
 ### 👥 Roles & Access
