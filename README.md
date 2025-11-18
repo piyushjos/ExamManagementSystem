@@ -96,9 +96,8 @@ ExamPilot is a role-based web app where Admins manage users and courses, Instruc
 
 
 ## Aws Deployment Architecture
-* **S3** serves the SPA; requests go to **EC2**.
-* **EC2 ↔ RDS** allowed via security groups (3306).
-* **CORS**: backend allows the S3 website origin.
+![image5](docs/images/image5.png)
+
 
 ## Backend Setup
 
