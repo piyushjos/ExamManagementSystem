@@ -24,7 +24,7 @@
 
 
 
-# ExamPilot
+# AI Powered ExamPilot
 React + Spring Boot + MySQL + AWS (EC2, S3, RDS, ALB)
 
 ExamPilot is a production-grade, role-based exam management platform designed for universities, bootcamps, and online training systems. It provides a complete lifecycle for course creation, exam publishing, and student evaluation — built with scalable AWS infrastructure and enhanced with AI-powered question generation using Google's Gemini API.ExamPilot is a role-based web app where Admins manage users and courses, Instructors create questions and publish or unpublish exams, and Students enroll and take exams. Students can view their results and overall GPA after submissions. The app provides clear flows for registration, course enrollment, taking exams, and viewing scores.
@@ -35,7 +35,7 @@ ExamPilot is a production-grade, role-based exam management platform designed fo
 - **JWT auth flow:** login + protected APIs (copy-paste `curl` to verify)
 
 ### 🎓 Student
-- **Register & enroll:** sign up and join available courses
+- **Register & enroll:** sign up and join available‹ courses
 - **Take exams:** timed/untimed attempts with instant submission
 - **View GPA & results:** see scores and overall GPA across courses
 
@@ -83,22 +83,24 @@ ExamPilot is a production-grade, role-based exam management platform designed fo
 
 
 
-## Screenshots / Demo
+## Screenshots
 ![image1](docs/images/image1.png)
 ![image2](docs/images/image2.png)
 ![image3](docs/images/image3.png)
 ![image4](docs/images/image4.png)
 
+## 🎬 Live Demo 
+![Demo](docs/images/demo.gif)
 
 ## ER Diagram
 
 
 
-![ER Diagram](Er.png)
+![ER Diagram](ER_DIAGRAM.png)
 
 
 ## AWS Deployment Architecture
-![image5](docs/images/image5.png)
+![image5](docs/images/image5.jpeg)
 
 
 ## Backend SetupS
